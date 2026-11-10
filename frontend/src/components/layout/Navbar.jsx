@@ -1,8 +1,8 @@
 import { useAuth } from '../../context/AuthContext';
-import { Menu } from 'lucide-react';
+import { Menu, LogOut } from 'lucide-react';
 
 const Navbar = ({ onToggle }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const roleLabel = {
     admin: 'Administrator',
@@ -30,6 +30,14 @@ const Navbar = ({ onToggle }) => {
         <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
           {user.username.charAt(0).toUpperCase()}
         </div>
+        <button
+          onClick={logout}
+          className="lg:hidden p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-lg"
+          aria-label="Logout"
+          title="Logout"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
       </div>
     </nav>
   );

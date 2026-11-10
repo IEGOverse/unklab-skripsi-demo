@@ -55,9 +55,10 @@ const Sidebar = ({ open, onClose }) => {
       )}
 
       <aside
-        className={`fixed left-0 top-0 h-screen w-64 bg-navy-900 text-white z-50 transform transition-transform duration-300 ${
-          open ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`}
+        className={`fixed left-0 top-0 h-screen h-[100dvh] w-64 bg-navy-900 text-white z-50 flex flex-col transform transition-all duration-300 ${
+          open ? 'translate-x-0 visible' : '-translate-x-full invisible'
+        } lg:translate-x-0 lg:visible`}
+        aria-hidden={!open}
       >
         <div className="p-6 border-b border-navy-700 flex items-center justify-between">
           <div>
@@ -72,7 +73,7 @@ const Sidebar = ({ open, onClose }) => {
             <X className="w-6 h-6" />
           </button>
         </div>
-        <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-160px)]">
+        <nav className="p-4 space-y-1 overflow-y-auto flex-1">
           {items.map((item) => (
             <button
               key={item.label}
@@ -86,7 +87,7 @@ const Sidebar = ({ open, onClose }) => {
             </button>
           ))}
         </nav>
-        <div className="absolute bottom-0 left-0 w-full p-4 border-t border-navy-700">
+        <div className="p-4 border-t border-navy-700 shrink-0">
           <button
             onClick={() => { logout(); onClose(); }}
             className="flex items-center w-full px-4 py-3 rounded-lg text-gray-300 hover:bg-navy-700 hover:text-white transition-colors"
