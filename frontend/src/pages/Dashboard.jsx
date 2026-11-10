@@ -68,7 +68,7 @@ const Dashboard = () => {
         <p className="text-gray-600">Selamat datang, {user.username}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
         {items.map((item) => (
           <div key={item.label} className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center gap-4`}>
             <div className={`w-12 h-12 rounded-lg ${item.color} flex items-center justify-center text-white`}>

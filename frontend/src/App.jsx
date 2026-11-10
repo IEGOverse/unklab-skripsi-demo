@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
@@ -24,15 +25,19 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-const Layout = ({ children }) => (
-  <div className="min-h-screen bg-gray-50">
-    <Sidebar />
-    <div className="ml-64 p-6">
-      <Navbar />
-      <main className="mt-6">{children}</main>
+const Layout = ({ children }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="ml-0 lg:ml-64 p-4 sm:p-6">
+        <Navbar onToggle={() => setSidebarOpen(true)} />
+        <main className="mt-4 sm:mt-6">{children}</main>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Page = ({ roles, children }) => (
   <ProtectedRoute allowedRoles={roles}>
