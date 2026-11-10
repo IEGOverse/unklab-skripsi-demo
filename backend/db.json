@@ -1,0 +1,227 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@unklab.ac.id",
+      "password_hash": "9848936d10fef14a4f3c690db9371854de0c4210b7eaa8a72a2294fb820c9795",
+      "role": "admin",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "username": "dosen_a",
+      "email": "dosen.a@unklab.ac.id",
+      "password_hash": "92406bd02b4ba6c34e7f0cb059d90ae0b7f9a507fe6515e8e80e4e0bc2222017",
+      "role": "dosen",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": 3,
+      "username": "dosen_b",
+      "email": "dosen.b@unklab.ac.id",
+      "password_hash": "92406bd02b4ba6c34e7f0cb059d90ae0b7f9a507fe6515e8e80e4e0bc2222017",
+      "role": "dosen",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": 4,
+      "username": "mhs_001",
+      "email": "mhs001@unklab.ac.id",
+      "password_hash": "563158ea2adbc6c6dfc18bf93a7be727f8813d539620719042512183efa6b9c8",
+      "role": "mahasiswa",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": 5,
+      "username": "mhs_002",
+      "email": "mhs002@unklab.ac.id",
+      "password_hash": "563158ea2adbc6c6dfc18bf93a7be727f8813d539620719042512183efa6b9c8",
+      "role": "mahasiswa",
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "students": [
+    {
+      "id": 1,
+      "user_id": 4,
+      "npm": "211001001",
+      "nama": "Budi Santoso",
+      "prodi": "Sistem Informasi",
+      "telepon": "08123456789",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "user_id": 5,
+      "npm": "211001002",
+      "nama": "Siti Rahayu",
+      "prodi": "Sistem Informasi",
+      "telepon": "08123456790",
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "lecturers": [
+    {
+      "id": 1,
+      "user_id": 2,
+      "nip": "198001012020011001",
+      "nama": "Dr. Ahmad Rizki, S.Kom., M.Kom.",
+      "prodi": "Sistem Informasi",
+      "telepon": "08123456781",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "user_id": 3,
+      "nip": "198001012020011002",
+      "nama": "Dr. Siti Nurhaliza, S.Kom., M.T.",
+      "prodi": "Sistem Informasi",
+      "telepon": "08123456782",
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "lecturer_expertise": [
+    {
+      "id": 1,
+      "lecturer_id": 1,
+      "bidang_keahlian": "Sistem Informasi",
+      "deskripsi": "Pengembangan sistem informasi, analisis dan desain sistem, manajemen basis data"
+    },
+    {
+      "id": 2,
+      "lecturer_id": 1,
+      "bidang_keahlian": "Data Mining",
+      "deskripsi": "Pola data, klasifikasi, clustering, asosiasi, prediksi"
+    },
+    {
+      "id": 3,
+      "lecturer_id": 2,
+      "bidang_keahlian": "Sistem Informasi",
+      "deskripsi": "Pengembangan sistem informasi, analisis dan desain sistem"
+    },
+    {
+      "id": 4,
+      "lecturer_id": 2,
+      "bidang_keahlian": "Jaringan Komputer",
+      "deskripsi": "Jaringan komputer, keamanan jaringan, protokol jaringan"
+    }
+  ],
+  "theses": [
+    {
+      "id": 1,
+      "student_id": 1,
+      "judul": "Sistem Informasi Manajemen Skripsi Berbasis Web",
+      "abstrak": "Penelitian ini membahas pengembangan sistem informasi manajemen skripsi berbasis web untuk memudahkan administrasi pengajuan judul, bimbingan, dan penjadwalan sidang skripsi di perguruan tinggi.",
+      "status": "diajukan",
+      "created_at": "2026-01-15T00:00:00Z"
+    },
+    {
+      "id": 2,
+      "student_id": 2,
+      "judul": "Analisis Sentimen Media Sosial Menggunakan Metode Naive Bayes",
+      "abstrak": "Studi ini menganalisis sentimen masyarakat terhadap policy publik melalui media sosial menggunakan algoritma Naive Bayes untuk klasifikasi sentimen positif, negatif, dan netral.",
+      "status": "draft",
+      "created_at": "2026-01-20T00:00:00Z"
+    }
+  ],
+  "consultations": [
+    {
+      "id": 1,
+      "student_id": 1,
+      "lecturer_id": 1,
+      "thesis_id": 1,
+      "tanggal": "2026-02-01",
+      "topik": "Judul skripsi dan ruang lingkup penelitian",
+      "catatan": "Judul sudah sesuai, perlu perbaikan pada bagian latar belakang dan rumusan masalah.",
+      "status": "selesai",
+      "created_at": "2026-02-01T09:00:00Z"
+    },
+    {
+      "id": 2,
+      "student_id": 1,
+      "lecturer_id": 1,
+      "thesis_id": 1,
+      "tanggal": "2026-02-08",
+      "topik": "Metode penelitian dan pengumpulan data",
+      "catatan": "Metode penelitian sudah baik, perlu detail pada instrumen pengumpulan data.",
+      "status": "selesai",
+      "created_at": "2026-02-08T10:00:00Z"
+    }
+  ],
+  "defense_requests": [
+    {
+      "id": 1,
+      "student_id": 1,
+      "thesis_id": 1,
+      "topik_ai": "Sistem Informasi Manajemen Skripsi",
+      "bidang_ai": "Sistem Informasi",
+      "dosen_rekomendasi_id": 1,
+      "status": "pending",
+      "alasan_admin": null,
+      "created_at": "2026-03-01T00:00:00Z"
+    },
+    {
+      "student_id": 1,
+      "thesis_id": 1,
+      "topik_ai": "Analisis dan pengembangan sistem informasi",
+      "bidang_ai": "Sistem Informasi",
+      "dosen_rekomendasi_id": 1,
+      "status": "pending",
+      "alasan_admin": null,
+      "created_at": "2026-11-09T06:28:23.655Z",
+      "id": 2
+    }
+  ],
+  "defense_schedules": [],
+  "lecturer_availability": [
+    {
+      "id": 1,
+      "lecturer_id": 1,
+      "tanggal": "2026-03-15",
+      "waktu_mulai": "08:00",
+      "waktu_selesai": "12:00",
+      "status": "tersedia"
+    },
+    {
+      "id": 2,
+      "lecturer_id": 1,
+      "tanggal": "2026-03-15",
+      "waktu_mulai": "13:00",
+      "waktu_selesai": "17:00",
+      "status": "tersedia"
+    },
+    {
+      "id": 3,
+      "lecturer_id": 2,
+      "tanggal": "2026-03-15",
+      "waktu_mulai": "08:00",
+      "waktu_selesai": "12:00",
+      "status": "tersedia"
+    },
+    {
+      "id": 4,
+      "lecturer_id": 2,
+      "tanggal": "2026-03-15",
+      "waktu_mulai": "13:00",
+      "waktu_selesai": "17:00",
+      "status": "tersedia"
+    },
+    {
+      "id": 5,
+      "lecturer_id": 1,
+      "tanggal": "2026-03-16",
+      "waktu_mulai": "08:00",
+      "waktu_selesai": "12:00",
+      "status": "tersedia"
+    },
+    {
+      "id": 6,
+      "lecturer_id": 2,
+      "tanggal": "2026-03-16",
+      "waktu_mulai": "13:00",
+      "waktu_selesai": "17:00",
+      "status": "tersedia"
+    }
+  ]
+}
