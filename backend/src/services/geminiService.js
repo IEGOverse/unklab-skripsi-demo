@@ -25,7 +25,8 @@ async function analyzeTopic(judul, abstrak) {
 
   try {
     const genAI = new GoogleGenerativeAI(API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+    const model = genAI.getGenerativeModel({ model: modelName });
 
     const prompt = `
 Analisis skripsi berikut dan berikan hasil dalam format JSON yang valid (tanpa markdown code block):
