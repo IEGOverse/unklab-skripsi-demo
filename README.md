@@ -75,6 +75,16 @@ npx localtunnel --port 5000
 
 Catatan localtunnel: pengunjung pertama kali melihat halaman "Friendly Reminder" dan diminta **Tunnel Password**, yaitu IP publik komputer pembuat tunnel (cek di whatismyip.com atau `curl ifconfig.me`). URL **berubah setiap kali tunnel di-restart**, dan tunnel hanya hidup selama prosesnya berjalan.
 
+### 4. Deploy ke Railway (URL tetap, tanpa kartu)
+
+Aplikasi sudah di-deploy ke Railway (satu layanan: backend menyajikan API + build frontend):
+
+**URL publik: https://unklab-skripsi-demo-production.up.railway.app**
+
+Project & deploy terhubung ke repo GitHub `IEGOverse/unklab-skripsi-demo` (private). Root `package.json` berisi script `build` (install + build frontend, install backend) dan `start` (`node backend/server.js`). Untuk redeploy setelah perubahan kode: `git push` lalu `npx @railway/cli up --service unklab-skripsi-demo`.
+
+Catatan Railway: berjalan di region SFO; memakai kredit trial akun (tidak butuh kartu saat ini); filesystem ephemeral — data runtime kembali ke seed `db.json` saat service re-deploy/restart; `PORT` di-inject otomatis oleh Railway dan sudah dibaca oleh `server.js`.
+
 ## Akun Demo
 
 Password **berbeda per role** dan diverifikasi oleh backend (SHA-256). Password diberikan secara terpisah oleh presenter (tidak tertulis di sini). Setelah backend restart, semua sesi berakhir dan pengguna harus login ulang.
