@@ -38,7 +38,22 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
+    <div
+      className="min-h-screen grid lg:grid-cols-2 relative overflow-hidden"
+      style={{
+        background:
+          'radial-gradient(circle at 90% 8%, rgba(59,130,246,.22) 0, transparent 42%), radial-gradient(circle at 8% 92%, rgba(34,211,238,.28) 0, transparent 45%), radial-gradient(circle at 45% 55%, rgba(147,197,253,.25) 0, transparent 50%), linear-gradient(160deg, #f5f9ff 0%, #eaf0fb 55%, #eef4ff 100%)',
+      }}
+    >
+      {/* Pola titik dekoratif global */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none"
+        style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(30,64,175,.10) 1.2px, transparent 0)', backgroundSize: '26px 26px' }}
+      />
+      {/* Lingkaran cahaya dekoratif */}
+      <div aria-hidden="true" className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-blue-400/15 blur-3xl" />
+      <div aria-hidden="true" className="absolute -bottom-36 -left-36 w-[28rem] h-[28rem] rounded-full bg-cyan-400/15 blur-3xl" />
       {/* Panel brand (desktop) */}
       <div
         className="relative hidden lg:flex flex-col justify-between p-12 text-white overflow-hidden bg-gradient-to-br from-navy-900 via-navy-800 to-[#14335c]"
@@ -89,7 +104,7 @@ const Login = () => {
       </div>
 
       {/* Panel form */}
-      <div className="flex items-center justify-center p-6 sm:p-10">
+      <div className="relative flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md">
           {/* Logo mobile */}
           <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
@@ -102,7 +117,8 @@ const Login = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-card border border-slate-200/80 p-8">
+          <div className="relative overflow-hidden bg-white rounded-2xl shadow-2xl shadow-blue-900/10 border border-slate-200/70 p-8">
+            <div aria-hidden="true" className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-blue-600 via-cyan-400 to-blue-600" />
             <h2 className="text-2xl font-extrabold font-display text-slate-900 tracking-tight">Selamat datang</h2>
             <p className="text-slate-500 mt-1.5 mb-6 text-sm">Masuk ke akun Anda untuk melanjutkan.</p>
 
@@ -157,6 +173,8 @@ const Login = () => {
               <p className="text-xs text-slate-500">Demo: gunakan akun yang diberikan presenter (password diverifikasi).</p>
             </div>
           </div>
+
+          <p className="mt-6 text-center text-[11px] text-slate-500">© 2026 Universitas Klabat · Sistem Manajemen Skripsi — data bersifat uji (dummy)</p>
         </div>
       </div>
     </div>
