@@ -46,7 +46,7 @@ const AIRecommendasi = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Shield className="w-6 h-6 text-blue-600" />
-        <h1 className="text-2xl font-bold text-gray-900">AI Rekomendasi Dosen</h1>
+        <h1 className="text-2xl font-extrabold font-display text-slate-900 tracking-tight">AI Rekomendasi Dosen</h1>
       </div>
       <p className="text-gray-600">Masukkan judul dan abstrak skripsi untuk mendapatkan analisis topik dan rekomendasi dosen pembimbing/penguji.</p>
 

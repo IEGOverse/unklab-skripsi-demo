@@ -1,9 +1,14 @@
 import { useAuth } from '../../context/AuthContext';
-import { Menu, LogOut } from 'lucide-react';
+import { Menu, LogOut, Sparkles } from 'lucide-react';
 
 const Navbar = ({ onToggle }) => {
   const { user, logout } = useAuth();
 
+  const roleStyle = {
+    admin: 'bg-blue-50 text-blue-700 ring-blue-200',
+    dosen: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    mahasiswa: 'bg-violet-50 text-violet-700 ring-violet-200',
+  };
   const roleLabel = {
     admin: 'Administrator',
     dosen: 'Dosen',
@@ -11,28 +16,31 @@ const Navbar = ({ onToggle }) => {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 shadow-sm gap-3">
-      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+    <nav className="bg-white/90 backdrop-blur border border-slate-200/80 rounded-2xl flex justify-between items-center px-4 sm:px-5 py-3 shadow-card gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button
           onClick={onToggle}
-          className="lg:hidden p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+          className="lg:hidden p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
           aria-label="Buka menu"
         >
           <Menu className="w-6 h-6" />
         </button>
-        <span className="text-sm sm:text-lg font-semibold text-gray-900 truncate">Sistem Manajemen Skripsi UNKLAB</span>
-        <span className="hidden sm:inline px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded font-medium whitespace-nowrap">
+        <div className="min-w-0">
+          <p className="text-sm sm:text-base font-bold font-display text-slate-900 truncate leading-tight">Sistem Manajemen Skripsi UNKLAB</p>
+          <p className="hidden sm:flex items-center gap-1 text-[11px] text-slate-500"><Sparkles className="w-3 h-3 text-blue-500" /> Terintegrasi AI Gemini</p>
+        </div>
+        <span className={`hidden sm:inline px-2.5 py-1 text-[11px] rounded-full font-semibold ring-1 ring-inset whitespace-nowrap ${roleStyle[user.role] || 'bg-slate-100 text-slate-600 ring-slate-200'}`}>
           {roleLabel[user.role] || user.role}
         </span>
       </div>
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        <span className="text-sm text-gray-600 hidden md:inline">{user.username}</span>
-        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+        <span className="text-sm text-slate-500 hidden md:inline">{user.username}</span>
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 text-white text-sm font-bold flex items-center justify-center shadow-md shadow-blue-600/20">
           {user.username.charAt(0).toUpperCase()}
         </div>
         <button
           onClick={logout}
-          className="lg:hidden p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-lg"
+          className="lg:hidden p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
           aria-label="Logout"
           title="Logout"
         >

@@ -43,7 +43,7 @@ const DetailKonsultasi = () => {
         <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-700">
           <ArrowLeft className="w-4 h-4" /> Kembali
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Detail Konsultasi</h1>
+        <h1 className="text-2xl font-extrabold font-display text-slate-900 tracking-tight">Detail Konsultasi</h1>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

@@ -94,7 +94,7 @@ const DataDosen = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Data Dosen</h1>
+          <h1 className="text-2xl font-extrabold font-display text-slate-900 tracking-tight">Data Dosen</h1>
           <p className="text-gray-600">Kelola data dosen (hanya Admin)</p>
         </div>
         <Button onClick={() => { resetForm(); setOpen(true); }} variant="primary">
