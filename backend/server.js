@@ -20,6 +20,25 @@ const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'db.json');
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json());
 
+// Data API harus selalu segar: matikan etag + paksa no-store saat response dikirim
+// (json-server meng-set Cache-Control sendiri setelah middleware biasa — jadi kita
+//  set header di dalam pembungkus res.json/jsonp/send)
+app.disable('etag');
+app.use('/api', (req, res, next) => {
+  const setHdr = () => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  };
+  const origJson = res.json.bind(res);
+  const origJsonp = res.jsonp.bind(res);
+  const origSend = res.send.bind(res);
+  res.json = (body) => { setHdr(); return origJson(body); };
+  res.jsonp = (body) => { setHdr(); return origJsonp(body); };
+  res.send = (body) => { setHdr(); return origSend(body); };
+  next();
+});
+
 // Route AI (proxy Gemini API)
 app.use('/api/ai', aiRoutes);
 
