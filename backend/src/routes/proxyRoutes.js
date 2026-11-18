@@ -83,6 +83,24 @@ const guardWrite = (req, res, next) => {
     return res.status(403).json({ success: false, message: 'Akses ditolak.' });
   }
 
+// ===== Aturan khusus notifikasi =====
+  if (base === 'notifications') {
+    // GET di-handle oleh scopeNotificationsRead sebelum guardWrite
+    if (req.method === 'POST') {
+      if (role !== 'admin') return res.status(403).json({ success: false, message: 'Hanya admin yang dapat mengirim notifikasi.' });
+      return next();
+    }
+    if (req.method === 'PATCH') {
+      if (role !== 'admin' && role !== 'dosen') return res.status(403).json({ success: false, message: 'Akses ditolak.' });
+      return next();
+    }
+    if (req.method === 'DELETE') {
+      if (role !== 'admin') return res.status(403).json({ success: false, message: 'Hanya admin yang dapat menghapus notifikasi.' });
+      return next();
+    }
+    return res.status(403).json({ success: false, message: 'Akses ditolak.' });
+  }
+
   if (base === 'users' && role !== 'admin') {
     return res.status(403).json({ success: false, message: 'Hanya admin yang dapat mengubah data pengguna.' });
   }
@@ -139,9 +157,32 @@ const scopeThesesRead = (req, res, next) => {
   }
 };
 
+// Notifications: GET disaring berdasarkan role (admin hanya lihat notif admin, dosen hanya lihat notif dosen)
+const scopeNotificationsRead = (req, res, next) => {
+  if (req.method !== 'GET') return next();
+  const parts = req.path.split('/').filter(Boolean);
+  if (parts[0] !== 'notifications') return next();
+  const role = req.user?.role;
+  if (role !== 'admin' && role !== 'dosen') return res.status(403).json({ success: false, message: 'Akses ditolak.' });
+  try {
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+    const list = (db.notifications || []).filter(n => n.recipient_role === role);
+    // Item spesifik? filter juga
+    if (parts.length >= 2) {
+      const id = Number(parts[1]);
+      const found = list.find(n => Number(n.id) === id);
+      return found ? res.jsonp(found) : res.status(404).json({ success: false, message: 'Notifikasi tidak ditemukan.' });
+    }
+    return res.jsonp(list);
+  } catch (e) {
+    return res.status(500).json({ success: false, message: 'Gagal membaca database.' });
+  }
+};
+
 router.use(middlewares);
 router.use(stripPasswordHash);
 router.use(scopeThesesRead);
+router.use(scopeNotificationsRead);
 router.use(guardWrite);
 router.use(apiRouter);
 

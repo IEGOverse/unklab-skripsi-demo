@@ -162,7 +162,12 @@
       "tanggal_diusulkan": "2026-03-22",
       "waktu_diusulkan": "09:00",
       "catatan_mahasiswa": "Mohon dijadwalkan pagi hari (saya dari luar kota untuk sidang).",
-      "alasan_dosen": null
+      "alasan_dosen": null,
+      "usulan_tanggal": null,
+      "usulan_waktu": null,
+      "usulan_ruangan": null,
+      "usulan_penguji_1_id": null,
+      "usulan_penguji_2_id": null
     },
     {
       "student_id": 1,
@@ -177,7 +182,12 @@
       "tanggal_diusulkan": "2026-03-25",
       "waktu_diusulkan": "13:00",
       "catatan_mahasiswa": "Sidang setelah jam makan siang, ruangan kampus tersedia.",
-      "alasan_dosen": null
+      "alasan_dosen": null,
+      "usulan_tanggal": null,
+      "usulan_waktu": null,
+      "usulan_ruangan": null,
+      "usulan_penguji_1_id": null,
+      "usulan_penguji_2_id": null
     }
   ],
   "defense_schedules": [],
@@ -602,6 +612,30 @@
       "sidang_penguji": [],
       "sempro_detail": {},
       "nilai_detail": {}
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "recipient_role": "dosen",
+      "sender": "Mahasiswa",
+      "title": "Budi Santoso mengajukan sidang defense",
+      "body": "Budi Santoso mengajukan sidang defense untuk \"Sistem Informasi Manajemen Skripsi Berbasis Web\". Usulan: 2026-03-22 09:00.",
+      "type": "defense_request",
+      "request_id": 1,
+      "read": false,
+      "created_at": "2026-11-18T17:34:30.167Z"
+    },
+    {
+      "id": 2,
+      "recipient_role": "dosen",
+      "sender": "Mahasiswa",
+      "title": "Budi Santoso mengajukan sidang defense (pengajuan kedua)",
+      "body": "Budi Santoso mengajukan sidang defense kedua untuk skripsi yang sama. Usulan: 2026-03-25 13:00.",
+      "type": "defense_request",
+      "request_id": 2,
+      "read": false,
+      "created_at": "2026-11-18T17:34:30.168Z"
     }
   ]
 }

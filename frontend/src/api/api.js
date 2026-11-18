@@ -60,6 +60,11 @@ export const createExpertise = (data) => api.post('/lecturer_expertise', data);
 export const updateExpertise = (id, data) => api.put(`/lecturer_expertise/${id}`, data);
 export const deleteExpertise = (id) => api.delete(`/lecturer_expertise/${id}`);
 
+// Notifications
+export const getNotifications = () => api.get('/notifications');
+export const createNotification = (data) => api.post('/notifications', data);
+export const updateNotification = (id, data) => api.patch(`/notifications/${id}`, data);
+
 // Theses
 export const getTheses = () => api.get('/theses');
 export const createThesis = (data) => api.post('/theses', data);
@@ -81,6 +86,7 @@ export const deleteDefenseRequest = (id) => api.delete(`/defense_requests/${id}`
 // Defense Schedules
 export const getDefenseSchedules = () => api.get('/schedules');
 export const createDefenseSchedule = (data) => api.post('/schedules', data);
+export const decideProposal = (data) => api.post('/schedules/proposal-decision', data);
 export const checkScheduleConflict = (params) =>
   api.get('/schedules/check-conflict', { params });
 

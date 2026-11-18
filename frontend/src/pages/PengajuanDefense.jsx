@@ -121,13 +121,15 @@ const PengajuanDefense = () => {
       <div>
         <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
           r.status === 'disetujui' || r.status === 'diterima_dosen' ? 'bg-green-100 text-green-800' :
+          r.status === 'menunggu_persetujuan_dosen' ? 'bg-amber-100 text-amber-800' :
           r.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
           r.status === 'ditolak_dosen' || r.status === 'ditolak' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
         }`}>{
           r.status === 'pending' ? 'Menunggu Dosen' :
           r.status === 'diterima_dosen' ? 'Diterima Dosen' :
           r.status === 'ditolak_dosen' ? 'Ditolak Dosen' :
-          r.status === 'disetujui' ? 'Disetujui (Admin)' : r.status
+          r.status === 'menunggu_persetujuan_dosen' ? 'Diusulkan Admin (Menunggu Dosen)' :
+          r.status === 'disetujui' ? 'Dijadwalkan' : r.status
         }</span>
         {r.status === 'ditolak_dosen' && r.alasan_dosen && (
           <div className="text-[10px] text-red-600 mt-1 max-w-[220px]">Alasan: {r.alasan_dosen}</div>

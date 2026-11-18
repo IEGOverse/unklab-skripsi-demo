@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   getDefenseRequests, updateDefenseRequest, getTheses, getStudents, getLecturers,
+  getNotifications, updateNotification, decideProposal,
 } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
 import Select from '../components/common/Select';
 import Modal from '../components/common/Modal';
 import Table from '../components/common/Table';
-import { Inbox, Eye, Check, X, Clock } from 'lucide-react';
+import { Inbox, Eye, Check, X, Clock, Bell, CalendarCheck } from 'lucide-react';
 
 const TABS = [
   { key: 'pending', label: 'Menunggu Keputusan' },
@@ -21,6 +22,7 @@ const STATUS_LABEL = {
   diterima_dosen: 'Diterima',
   ditolak_dosen: 'Ditolak',
   disetujui: 'Disetujui (Admin)',
+  menunggu_persetujuan_dosen: 'Diusulkan Admin (Menunggu Anda)',
 };
 
 const PersetujuanJadwal = () => {
@@ -34,19 +36,22 @@ const PersetujuanJadwal = () => {
   const [alasan, setAlasan] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => { load(); }, []);
   const load = async () => {
     setLoading(true);
     try {
-      const [rReq, rTh, rSt, rLec] = await Promise.all([
+      const [rReq, rTh, rSt, rLec, rNotif] = await Promise.all([
         getDefenseRequests(), getTheses(), getStudents(), getLecturers(),
+        getNotifications().catch(() => ({ data: [] })),
       ]);
       const norm = (r) => r.data?.data || r.data || [];
       setRequests(norm(rReq));
       setTheses(norm(rTh));
       setStudents(norm(rSt));
       setLecturers(norm(rLec));
+      setNotifications(norm(rNotif));
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
@@ -68,6 +73,10 @@ const PersetujuanJadwal = () => {
     return requests.filter(r => r.status === tab);
   }, [requests, tab]);
 
+  const unreadNotif = notifications.filter(n => !n.read);
+  const adminProposals = requests.filter(r => r.status === 'menunggu_persetujuan_dosen');
+  const [rejectingId, setRejectingId] = useState(null);
+
   const decide = async (row, newStatus) => {
     if (newStatus === 'ditolak_dosen' && !alasan.trim()) {
       setMessage({ type: 'error', text: 'Alasan penolakan wajib diisi.' });
@@ -84,6 +93,44 @@ const PersetujuanJadwal = () => {
     } catch (e) {
       setMessage({ type: 'error', text: 'Gagal menyimpan keputusan: ' + (e.response?.data?.message || e.message) });
     } finally { setLoading(false); }
+  };
+
+  // ===== Keputusan atas usulan jadwal dari Admin (konflik) =====
+  const approveProposal = async (req) => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      await decideProposal({ decision: 'approve', request_id: req.id });
+      setMessage({ type: 'success', text: 'Usulan jadwal disetujui dan jadwal tersimpan.' });
+      load();
+    } catch (e) {
+      setMessage({ type: 'error', text: 'Gagal menyetujui usulan: ' + (e.response?.data?.message || e.message) });
+    } finally { setLoading(false); }
+  };
+
+  const rejectProposal = async (req) => {
+    if (!alasan.trim()) {
+      setMessage({ type: 'error', text: 'Alasan penolakan wajib diisi.' });
+      return;
+    }
+    setLoading(true);
+    setMessage(null);
+    try {
+      await decideProposal({ decision: 'reject', request_id: req.id, alasan: alasan.trim() });
+      setAlasan('');
+      setRejectingId(null);
+      setMessage({ type: 'success', text: 'Usulan jadwal ditolak. Admin akan mengusulkan jadwal baru.' });
+      load();
+    } catch (e) {
+      setMessage({ type: 'error', text: 'Gagal menolak usulan: ' + (e.response?.data?.message || e.message) });
+    } finally { setLoading(false); }
+  };
+
+  const markNotificationRead = async (n) => {
+    try {
+      await updateNotification(n.id, { ...n, read: true });
+      load();
+    } catch (e) { console.error(e); }
   };
 
   const columns = [
@@ -120,6 +167,77 @@ const PersetujuanJadwal = () => {
           <p className="text-gray-600">Tinjau pengajuan defense dari mahasiswa — periksa detail, lalu terima atau tolak.</p>
         </div>
       </div>
+
+      {/* Banner notifikasi belum dibaca */}
+      {unreadNotif.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-card">
+          <p className="font-bold text-amber-900 flex items-center gap-2"><Bell className="w-5 h-5" /> {unreadNotif.length} notifikasi belum dibaca</p>
+          <ul className="mt-2 space-y-2">
+            {unreadNotif.map(n => (
+              <li key={n.id} className="flex items-start justify-between gap-3 text-sm bg-white rounded-xl p-3 border border-amber-200/60">
+                <div>
+                  <p className="font-semibold text-slate-900">{n.title}</p>
+                  <p className="text-xs text-slate-600 mt-0.5">{n.body}</p>
+                </div>
+                <button onClick={() => markNotificationRead(n)} className="text-xs text-blue-700 hover:underline shrink-0">Tandai dibaca</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Usulan Jadwal dari Admin — perlu persetujuan dosen */}
+      {adminProposals.length > 0 && (
+        <div className="bg-white rounded-2xl border-2 border-amber-300 shadow-card p-6">
+          <h3 className="font-bold font-display text-slate-900 mb-1 flex items-center gap-2"><CalendarCheck className="w-5 h-5 text-amber-600" /> Usulan Jadwal dari Admin ({adminProposals.length})</h3>
+          <p className="text-xs text-slate-500 mb-4">Slot semula bentrok — admin mengusulkan jadwal. Setujui atau tolak.</p>
+          <div className="space-y-4">
+            {adminProposals.map(req => (
+              <div key={req.id} className="border border-amber-200 rounded-2xl p-4 bg-amber-50/50">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500">Mahasiswa</p>
+                    <p className="font-semibold text-slate-900">{studentOf(req.student_id)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500">Skripsi</p>
+                    <p className="font-semibold text-slate-900">{thesisOf(req.thesis_id)?.judul || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-slate-500">Penguji</p>
+                    <p className="font-semibold text-slate-900">{lecturerName(req.usulan_penguji_1_id)} & {lecturerName(req.usulan_penguji_2_id)}</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white border border-amber-200">
+                    <p className="text-[10px] uppercase tracking-widest text-amber-700 font-bold">Usulan Jadwal</p>
+                    <p className="font-bold text-amber-900">{req.usulan_tanggal} · {req.usulan_waktu} · Ruangan {req.usulan_ruangan}</p>
+                  </div>
+                </div>
+                {rejectingId === req.id ? (
+                  <div className="mt-3">
+                    <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Alasan penolakan (wajib)</label>
+                    <textarea
+                      rows={2}
+                      value={alasan}
+                      onChange={(e) => setAlasan(e.target.value)}
+                      placeholder="Berikan alasan..."
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 outline-none text-sm"
+                    />
+                    <div className="flex justify-end gap-2 mt-2">
+                      <Button variant="secondary" onClick={() => { setRejectingId(null); setAlasan(''); }}>Batal</Button>
+                      <Button variant="danger" onClick={() => rejectProposal(req)} disabled={loading || !alasan.trim()}><X className="w-4 h-4 mr-1" /> Tolak Usulan</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex justify-end gap-2 mt-3">
+                    <Button variant="secondary" onClick={() => { setRejectingId(req.id); setAlasan(''); setMessage(null); }}><X className="w-4 h-4 mr-1" /> Tolak</Button>
+                    <Button variant="success" onClick={() => approveProposal(req)} disabled={loading}><Check className="w-4 h-4 mr-1" /> Setujui Jadwal</Button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {message && (
         <div className={`p-3 rounded-xl text-sm border ${message.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'}`}>{message.text}</div>
