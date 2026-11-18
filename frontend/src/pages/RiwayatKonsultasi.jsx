@@ -149,7 +149,7 @@ const RiwayatKonsultasi = () => {
     )},
   ];
 
-  const studentOptions = students.map(s => ({ value: s.id, label: `${s.npm} - ${s.nama}` }));
+  const studentOptions = students.map(s => ({ value: s.id, label: `${s.nim} - ${s.nama}` }));
   const lecturerOptions = lecturers.map(l => ({ value: l.id, label: l.nama }));
   const thesisOptions = theses.map(t => ({ value: t.id, label: t.judul }));
 

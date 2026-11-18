@@ -45,7 +45,7 @@
     {
       "id": 1,
       "user_id": 4,
-      "npm": "211001001",
+      "nim": "211001001",
       "nama": "Budi Santoso",
       "prodi": "Sistem Informasi",
       "telepon": "08123456789",
@@ -54,7 +54,7 @@
     {
       "id": 2,
       "user_id": 5,
-      "npm": "211001002",
+      "nim": "211001002",
       "nama": "Siti Rahayu",
       "prodi": "Sistem Informasi",
       "telepon": "08123456790",

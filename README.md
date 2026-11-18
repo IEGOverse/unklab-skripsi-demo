@@ -2,7 +2,7 @@
 
 Aplikasi web full-stack untuk manajemen skripsi: pengajuan judul, bimbingan konsultasi, analisis topik dengan AI, rekomendasi dosen pembimbing, dan penjadwalan sidang defense.
 
-> **Catatan Penting:** Seluruh data di `backend/db.json` adalah **DATA UJI (DUMMY)**, bukan data resmi Universitas Klabat (UNKLAB). Semua nama, NIP/NPM, email, nomor telepon, dan judul skripsi pada aplikasi ini fiktif dan hanya untuk keperluan demo/pengujian.
+> **Catatan Penting:** Seluruh data di `backend/db.json` adalah **DATA UJI (DUMMY)**, bukan data resmi Universitas Klabat (UNKLAB). Semua nama, NIP/NIM, email, nomor telepon, dan judul skripsi pada aplikasi ini fiktif dan hanya untuk keperluan demo/pengujian.
 
 ## Teknologi
 

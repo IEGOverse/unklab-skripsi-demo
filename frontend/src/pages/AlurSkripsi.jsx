@@ -297,7 +297,7 @@ const AlurSkripsi = () => {
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <p className="text-[11px] uppercase tracking-wider text-slate-500">Mahasiswa</p>
-          <p className="font-semibold text-slate-900">{student ? `${student.nama} (${student.npm})` : '-'}</p>
+          <p className="font-semibold text-slate-900">{student ? `${student.nama} (${student.nim})` : '-'}</p>
         </div>
         <div className="md:col-span-2">
           <p className="text-[11px] uppercase tracking-wider text-slate-500">Judul</p>
@@ -572,7 +572,7 @@ const AlurSkripsi = () => {
               {wf.kartu_peserta_issued && (
                 <div className="mt-4 p-4 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50">
                   <p className="text-[11px] uppercase tracking-widest text-blue-700 font-bold">Kartu Peserta Ujian Skripsi</p>
-                  <p className="font-bold text-slate-900 mt-1">{student?.nama} ({student?.npm})</p>
+                  <p className="font-bold text-slate-900 mt-1">{student?.nama} ({student?.nim})</p>
                   <p className="text-sm text-slate-700">{wf.judul_final}</p>
                   <p className="text-xs text-slate-500 mt-1">Fakultas: {wf.fakultas} · Jumlah Penguji: {rule.jumlah_penguji ?? 2} orang · Berlaku untuk Sidang Skripsi</p>
                   <button onClick={() => window.print()} className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-blue-700 hover:text-blue-900 border border-blue-200 rounded-lg px-3 py-1.5 bg-white"><Printer className="w-4 h-4" /> Cetak Kartu Peserta</button>
@@ -700,7 +700,7 @@ const AlurSkripsi = () => {
           </div>
           <h2 className="text-center text-xl font-extrabold uppercase font-display mb-6">Surat Keputusan Penetapan Judul dan Pembimbing</h2>
           <table className="w-full mb-4"><tbody>
-            <tr><td className="py-1 w-44 font-semibold">Nama</td><td>: {student?.nama} ({student?.npm})</td></tr>
+            <tr><td className="py-1 w-44 font-semibold">Nama</td><td>: {student?.nama} ({student?.nim})</td></tr>
             <tr><td className="py-1 font-semibold">Fakultas</td><td>: {wf.fakultas}</td></tr>
             <tr><td className="py-1 font-semibold align-top">Judul Skripsi</td><td>: {wf.judul_final}</td></tr>
             <tr><td className="py-1 font-semibold align-top">Pembimbing I</td><td>: {lecturerName(wf.pembimbing_1_id)}</td></tr>
@@ -719,7 +719,7 @@ const AlurSkripsi = () => {
           </div>
           <h2 className="text-center text-xl font-extrabold uppercase font-display mb-6">Berita Acara Seminar Proposal</h2>
           <table className="w-full mb-4"><tbody>
-            <tr><td className="py-1 w-44 font-semibold">Nama</td><td>: {student?.nama} ({student?.npm})</td></tr>
+            <tr><td className="py-1 w-44 font-semibold">Nama</td><td>: {student?.nama} ({student?.nim})</td></tr>
             <tr><td className="py-1 font-semibold align-top">Judul Skripsi</td><td>: {wf.judul_final}</td></tr>
             <tr><td className="py-1 font-semibold">Tanggal Sempro</td><td>: {wf.sempro_tanggal || '-'}</td></tr>
           </tbody></table>
@@ -742,7 +742,7 @@ const AlurSkripsi = () => {
           </div>
           <h2 className="text-center text-xl font-extrabold uppercase font-display mb-6">Kartu Peserta Ujian Skripsi</h2>
           <table className="w-full mb-6"><tbody>
-            <tr><td className="py-1 w-44 font-semibold">Nama</td><td>: {student?.nama} ({student?.npm})</td></tr>
+            <tr><td className="py-1 w-44 font-semibold">Nama</td><td>: {student?.nama} ({student?.nim})</td></tr>
             <tr><td className="py-1 font-semibold align-top">Judul Skripsi</td><td>: {wf.judul_final}</td></tr>
             <tr><td className="py-1 font-semibold">Fakultas</td><td>: {wf.fakultas}</td></tr>
             <tr><td className="py-1 font-semibold">Jumlah Penguji</td><td>: {rule.jumlah_penguji ?? 2} orang</td></tr>
@@ -760,7 +760,7 @@ const AlurSkripsi = () => {
           </div>
           <h2 className="text-center text-xl font-extrabold uppercase font-display mb-6">Berita Acara Sidang Skripsi</h2>
           <table className="w-full mb-4"><tbody>
-            <tr><td className="py-1 w-44 font-semibold">Nama</td><td>: {student?.nama} ({student?.npm})</td></tr>
+            <tr><td className="py-1 w-44 font-semibold">Nama</td><td>: {student?.nama} ({student?.nim})</td></tr>
             <tr><td className="py-1 font-semibold align-top">Judul Skripsi</td><td>: {wf.judul_final}</td></tr>
           </tbody></table>
           <p className="font-semibold mb-1">Nilai per Penguji × Komponen:</p>

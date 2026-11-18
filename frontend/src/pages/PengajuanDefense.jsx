@@ -124,7 +124,7 @@ const PengajuanDefense = () => {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-extrabold font-display text-slate-900 tracking-tight">Pengajuan Defense</h1>
-          <p className="text-gray-600">Ajukan sidang defense untuk skripsi Anda{student ? ` — ${student.nama} (${student.npm})` : ''}</p>
+          <p className="text-gray-600">Ajukan sidang defense untuk skripsi Anda{student ? ` — ${student.nama} (${student.nim})` : ''}</p>
         </div>
         <Button onClick={() => setOpen(true)} variant="primary" disabled={!student}>
           <FileText className="w-4 h-4 mr-2" /> Ajukan Defense

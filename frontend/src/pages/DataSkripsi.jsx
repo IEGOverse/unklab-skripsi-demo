@@ -110,7 +110,7 @@ const DataSkripsi = () => {
     )},
   ];
 
-  const studentOptions = students.map(s => ({ value: s.id, label: `${s.npm} - ${s.nama}` }));
+  const studentOptions = students.map(s => ({ value: s.id, label: `${s.nim} - ${s.nama}` }));
 
   return (
     <div className="space-y-6">

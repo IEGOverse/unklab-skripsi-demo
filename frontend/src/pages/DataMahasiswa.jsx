@@ -16,7 +16,7 @@ const DataMahasiswa = () => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [form, setForm] = useState({ npm: '', nama: '', prodi: '', telepon: '', username: '', password: '' });
+  const [form, setForm] = useState({ nim: '', nama: '', prodi: '', telepon: '', username: '', password: '' });
   const [selectedId, setSelectedId] = useState(null);
   const [search, setSearch] = useState('');
 
@@ -35,13 +35,13 @@ const DataMahasiswa = () => {
     try {
       if (editMode) {
         await updateStudent(selectedId, {
-          npm: form.npm, nama: form.nama, prodi: form.prodi, telepon: form.telepon,
+          nim: form.nim, nama: form.nama, prodi: form.prodi, telepon: form.telepon,
         });
       } else {
         const userRes = await createUser({ username: form.username, password: form.password, role: 'mahasiswa' });
         const newUserId = userRes.data?.id ?? userRes.data?.data?.id;
         await createStudent({
-          npm: form.npm, nama: form.nama, prodi: form.prodi, telepon: form.telepon,
+          nim: form.nim, nama: form.nama, prodi: form.prodi, telepon: form.telepon,
           user_id: newUserId, created_at: new Date().toISOString(),
         });
       }
@@ -56,7 +56,7 @@ const DataMahasiswa = () => {
   const handleEdit = (row) => {
     setEditMode(true);
     setSelectedId(row.id);
-    setForm({ npm: row.npm, nama: row.nama, prodi: row.prodi, telepon: row.telepon, username: '', password: '' });
+    setForm({ nim: row.nim, nama: row.nama, prodi: row.prodi, telepon: row.telepon, username: '', password: '' });
     setOpen(true);
   };
 
@@ -71,16 +71,16 @@ const DataMahasiswa = () => {
   const resetForm = () => {
     setEditMode(false);
     setSelectedId(null);
-    setForm({ npm: '', nama: '', prodi: '', telepon: '', username: '', password: '' });
+    setForm({ nim: '', nama: '', prodi: '', telepon: '', username: '', password: '' });
   };
 
   const filtered = data.filter(d =>
     (d.nama || '').toLowerCase().includes(search.toLowerCase()) ||
-    (d.npm || '').toLowerCase().includes(search.toLowerCase())
+    (d.nim || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const columns = [
-    { label: 'NPM', key: 'npm' },
+    { label: 'NIM', key: 'nim' },
     { label: 'Nama', key: 'nama' },
     { label: 'Prodi', key: 'prodi' },
     { label: 'Telepon', key: 'telepon' },
@@ -106,14 +106,14 @@ const DataMahasiswa = () => {
 
       <div className="flex gap-2 items-center">
         <Search className="w-5 h-5 text-gray-400" />
-        <Input placeholder="Cari nama atau NPM..." value={search} onChange={(e) => setSearch(e.target.value)} className="mb-0" />
+        <Input placeholder="Cari nama atau NIM..." value={search} onChange={(e) => setSearch(e.target.value)} className="mb-0" />
       </div>
 
       <Table columns={columns} data={filtered} loading={loading} emptyMessage="Tidak ada data mahasiswa" />
 
       <Modal isOpen={open} onClose={() => setOpen(false)} title={editMode ? 'Edit Mahasiswa' : 'Tambah Mahasiswa'}>
         <form onSubmit={handleSave} className="space-y-4">
-          <Input label="NPM" value={form.npm} onChange={(e) => setForm({ ...form, npm: e.target.value })} required />
+          <Input label="NIM" value={form.nim} onChange={(e) => setForm({ ...form, nim: e.target.value })} required />
           <Input label="Nama" value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} required />
           <Input label="Prodi" value={form.prodi} onChange={(e) => setForm({ ...form, prodi: e.target.value })} required />
           <Input label="Telepon" value={form.telepon} onChange={(e) => setForm({ ...form, telepon: e.target.value })} required />
