@@ -87,12 +87,16 @@ Catatan Railway: berjalan di region SFO; memakai kredit trial akun (tidak butuh 
 
 ## Akun Demo
 
-Password **berbeda per role** dan diverifikasi oleh backend (SHA-256). Password diberikan secara terpisah oleh presenter (tidak tertulis di sini). Setelah backend restart, semua sesi berakhir dan pengguna harus login ulang.
+Password **per role**, diberikan secara terpisah oleh presenter (tidak tertulis di repo). Setelah backend restart, semua sesi berakhir dan pengguna harus login ulang.
 
-Untuk mengatur ulang password demo, edit konstanta `PASSWORDS` di `backend/scripts/set-demo-passwords.js` lalu jalankan:
+Untuk merotasi password demo (tanpa menyimpan password di repo):
 
 ```bash
-cd backend && node scripts/set-demo-passwords.js
+cd backend
+set DEMO_ADMIN=password_baru_admin
+set DEMO_DOSEN=password_baru_dosen
+set DEMO_MHS=password_baru_mahasiswa
+node scripts/rotate-demo-passwords.js
 ```
 
 | Username  | Role      | Akses                                          |
