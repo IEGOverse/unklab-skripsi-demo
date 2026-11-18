@@ -109,12 +109,11 @@
   ],
   "theses": [
     {
-      "id": 1,
       "student_id": 1,
       "judul": "Sistem Informasi Manajemen Skripsi Berbasis Web",
       "abstrak": "Penelitian ini membahas pengembangan sistem informasi manajemen skripsi berbasis web untuk memudahkan administrasi pengajuan judul, bimbingan, dan penjadwalan sidang skripsi di perguruan tinggi.",
-      "status": "diajukan",
-      "created_at": "2026-01-15T00:00:00Z"
+      "status": "ditolak",
+      "id": 1
     },
     {
       "id": 2,
