@@ -9,6 +9,8 @@ import KeahlianDosen from './pages/KeahlianDosen';
 import DataSkripsi from './pages/DataSkripsi';
 import PengajuanDefense from './pages/PengajuanDefense';
 import AIRecommendasi from './pages/AIRecommendasi';
+import AlurSkripsi from './pages/AlurSkripsi';
+import PengaturanFakultas from './pages/PengaturanFakultas';
 import PenjadwalanDefense from './pages/PenjadwalanDefense';
 import RiwayatKonsultasi from './pages/RiwayatKonsultasi';
 import DetailKonsultasi from './pages/DetailKonsultasi';
@@ -57,6 +59,8 @@ function App() {
           <Route path="/keahlian" element={<Page roles={['admin', 'dosen']}><KeahlianDosen /></Page>} />
           <Route path="/skripsi" element={<Page roles={['admin', 'mahasiswa']}><DataSkripsi /></Page>} />
           <Route path="/pengajuan-defense" element={<Page roles={['mahasiswa']}><PengajuanDefense /></Page>} />
+          <Route path="/alur-skripsi" element={<Page roles={['admin', 'dosen', 'mahasiswa']}><AlurSkripsi /></Page>} />
+          <Route path="/pengaturan-fakultas" element={<Page roles={['admin']}><PengaturanFakultas /></Page>} />
           <Route path="/ai-rekomendasi" element={<Page roles={['mahasiswa', 'admin']}><AIRecommendasi /></Page>} />
           <Route path="/jadwal-defense" element={<Page roles={['admin', 'dosen']}><PenjadwalanDefense /></Page>} />
           <Route path="/konsultasi" element={<Page roles={['admin', 'dosen', 'mahasiswa']}><RiwayatKonsultasi /></Page>} />

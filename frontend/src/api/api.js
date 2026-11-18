@@ -84,6 +84,15 @@ export const createDefenseSchedule = (data) => api.post('/schedules', data);
 export const checkScheduleConflict = (params) =>
   api.get('/schedules/check-conflict', { params });
 
+// Faculty Rules (Dynamic Faculty Rules)
+export const getFacultyRules = () => api.get('/faculty_rules');
+export const updateFacultyRule = (id, data) => api.patch(`/faculty_rules/${id}`, data);
+
+// Workflow Pengajuan Skripsi
+export const getWorkflows = () => api.get('/workflow');
+export const createWorkflow = (data) => api.post('/workflow', data);
+export const updateWorkflow = (id, data) => api.patch(`/workflow/${id}`, data);
+
 // AI
 export const aiAnalyze = (data) => api.post('/ai/analyze', data);
 export const aiRecommend = (params) => api.get('/ai/recommend', { params });

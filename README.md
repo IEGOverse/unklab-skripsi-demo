@@ -105,6 +105,18 @@ cd backend && node scripts/set-demo-passwords.js
 
 Catatan keamanan demo: respons API tidak pernah mengirim `password_hash`; password tersimpan sebagai hash SHA-256 di `db.json`.
 
+## Alur Skripsi UNKLAB (baru)
+
+Menu **Alur Skripsi** (`/alur-skripsi`, semua role) mengimplementasikan 9 tahap resmi UNKLAB: Verifikasi Prasyarat → Pengajuan & Seleksi Judul (1–3 topik + SK Penetapan) → Bimbingan Proposal (Bab 1–3, logbook & draf) → Seminar Proposal (input nilai & verifikasi revisi) → Penelitian & Syarat Khusus (surat izin + checklist dokumen dinamis) → Bimbingan Akhir & Turnitin (ambang sesuai fakultas) → Verifikasi Yudisium (bebas pustaka/business office/transkrip → Kartu Peserta Ujian) → Sidang Skripsi (nilai per komponen × bobot fakultas → skala mutu A…F) → Revisi Akhir & Repositori (naskah final → Lulus & Arsip).
+
+**Dynamic Faculty Rules** (`/pengaturan-fakultas`, khusus Admin): tiap fakultas mengatur min SKS/IPK/bimbingan, ambang Turnitin, jumlah penguji, bobot komponen nilai, dan checklist dokumen sendiri tanpa mengubah kode — FILKOM (repo + video demo), FKEP (Ethical Clearance), FKIP (Validasi Instrumen), FAPERTA (Seminar Hasil).
+
+**Edge cases:** Ganti Judul/Pembimbing (reset ke review Kaprodi), Perpanjangan Semester (progress tersimpan), Mengulang Sempro/Sidang.
+
+Yang **disimulasikan**: verifikasi SIU/SIUNGKE (checkbox), cek Turnitin (input skor + validasi ambang), surat izin riset (checklist manual), QR Berita Acara (placeholder), repositori digital (bukan DSpace/Eprints). Similarity check judul memakai algoritma Jaccard lokal (bukan plagiator/sejenis Turnitin).
+
+Entity baru: `faculty_rules`, `workflow` (total 11 tabel).
+
 ## Fitur per Role
 
 **Admin**
