@@ -3,7 +3,63 @@ import { getFacultyRules, updateFacultyRule } from '../api/api';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Select from '../components/common/Select';
-import { Building2, Plus, Trash2, Save, Info } from 'lucide-react';
+import { Building2, Save, Info, RotateCcw, Plus, Trash2 } from 'lucide-react';
+
+// Default resmi (ubah sesuai Buku Pedoman UNKLAB bila berbeda)
+const DEFAULT_SCALE = [
+  { huruf: 'A', min: 85 },
+  { huruf: 'A-', min: 80 },
+  { huruf: 'B+', min: 75 },
+  { huruf: 'B', min: 70 },
+  { huruf: 'B-', min: 65 },
+  { huruf: 'C+', min: 60 },
+  { huruf: 'C', min: 55 },
+  { huruf: 'D', min: 50 },
+  { huruf: 'E', min: 0 },
+];
+
+const DEFAULT_RULES = {
+  FILKOM: {
+    min_sks: 144, min_ipk: 2.75, min_bimbingan: 8, max_turnitin_percentage: 20, jumlah_penguji: 2, seminar_hasil_enabled: false,
+    komponen: [
+      { key: 'penulisan', label: 'Penulisan', bobot: 30 },
+      { key: 'presentasi', label: 'Presentasi', bobot: 30 },
+      { key: 'demo', label: 'Demo Sistem', bobot: 40 },
+    ],
+    checklist_dokumen: ['Link Repository / Source Code', 'Video Demo Aplikasi'],
+    grade_scale: DEFAULT_SCALE,
+  },
+  FKEP: {
+    min_sks: 144, min_ipk: 2.75, min_bimbingan: 8, max_turnitin_percentage: 25, jumlah_penguji: 3, seminar_hasil_enabled: false,
+    komponen: [
+      { key: 'penulisan', label: 'Penulisan', bobot: 30 },
+      { key: 'presentasi', label: 'Presentasi', bobot: 30 },
+      { key: 'praktik', label: 'Praktik Lapangan', bobot: 40 },
+    ],
+    checklist_dokumen: ['Sertifikat Ethical Clearance'],
+    grade_scale: DEFAULT_SCALE,
+  },
+  FKIP: {
+    min_sks: 144, min_ipk: 2.75, min_bimbingan: 8, max_turnitin_percentage: 25, jumlah_penguji: 2, seminar_hasil_enabled: false,
+    komponen: [
+      { key: 'penulisan', label: 'Penulisan', bobot: 30 },
+      { key: 'presentasi', label: 'Presentasi', bobot: 30 },
+      { key: 'instrumen', label: 'Instrumen / Expert Judgment', bobot: 40 },
+    ],
+    checklist_dokumen: ['Lembar Validasi Instrumen (Expert Judgment)'],
+    grade_scale: DEFAULT_SCALE,
+  },
+  FAPERTA: {
+    min_sks: 144, min_ipk: 2.50, min_bimbingan: 8, max_turnitin_percentage: 25, jumlah_penguji: 2, seminar_hasil_enabled: true,
+    komponen: [
+      { key: 'penulisan', label: 'Penulisan', bobot: 30 },
+      { key: 'presentasi', label: 'Presentasi', bobot: 30 },
+      { key: 'seminar_hasil', label: 'Seminar Hasil', bobot: 40 },
+    ],
+    checklist_dokumen: [],
+    grade_scale: DEFAULT_SCALE,
+  },
+};
 
 const PengaturanFakultas = () => {
   const [rules, setRules] = useState([]);
@@ -42,11 +98,24 @@ const PengaturanFakultas = () => {
     setDraft({ ...draft, komponen: k });
   };
 
+  const setScaleRow = (idx, patch) => {
+    const s = [...(draft.grade_scale || [])];
+    s[idx] = { ...s[idx], ...patch };
+    setDraft({ ...draft, grade_scale: s });
+  };
+  const addScaleRow = () => setDraft({ ...draft, grade_scale: [...(draft.grade_scale || []), { huruf: '', min: 0 }] });
+  const removeScaleRow = (idx) => setDraft({ ...draft, grade_scale: (draft.grade_scale || []).filter((_, i) => i !== idx) });
+
   const totalBobot = draft?.komponen?.reduce((sum, k) => sum + (Number(k.bobot) || 0), 0) || 0;
+  const scaleValid = draft?.grade_scale?.length > 0 && draft.grade_scale.every(s => s.huruf.trim() && Number(s.min) >= 0 && Number(s.min) <= 100);
 
   const handleSave = async () => {
     if (totalBobot !== 100) {
       setMessage({ type: 'error', text: `Total bobot komponen nilai harus 100% (saat ini ${totalBobot}%).` });
+      return;
+    }
+    if (!scaleValid) {
+      setMessage({ type: 'error', text: 'Skala mutu tidak valid: setiap baris wajib punya huruf dan nilai 0–100.' });
       return;
     }
     setSaving(true);
@@ -62,6 +131,7 @@ const PengaturanFakultas = () => {
         seminar_hasil_enabled: !!draft.seminar_hasil_enabled,
         komponen: draft.komponen.map(k => ({ key: k.key, label: k.label, bobot: Number(k.bobot) })),
         checklist_dokumen: (draft.checklistText || '').split('\n').map(s => s.trim()).filter(Boolean),
+        grade_scale: [...draft.grade_scale].sort((a, b) => Number(b.min) - Number(a.min)),
       };
       delete payload.checklistText;
       await updateFacultyRule(draft.id, payload);
@@ -80,6 +150,21 @@ const PengaturanFakultas = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);
 
+  const handleReset = async () => {
+    const def = DEFAULT_RULES[draft?.fakultas];
+    if (!def) { setMessage({ type: 'error', text: 'Fakultas tidak dikenali di template default.' }); return; }
+    if (!confirm(`Kembalikan seluruh pengaturan ${draft.fakultas} ke nilai default? Perubahan Anda akan hilang.`)) return;
+    setSaving(true);
+    setMessage(null);
+    try {
+      await updateFacultyRule(draft.id, { fakultas: draft.fakultas, ...def });
+      setMessage({ type: 'success', text: `Pengaturan ${draft.fakultas} dikembalikan ke default.` });
+      load();
+    } catch (e) {
+      setMessage({ type: 'error', text: 'Gagal reset: ' + (e.response?.data?.message || e.message) });
+    } finally { setSaving(false); }
+  };
+
   if (loading || !draft) {
     return <div className="p-10 text-center text-gray-500">Memuat pengaturan fakultas...</div>;
   }
@@ -96,13 +181,18 @@ const PengaturanFakultas = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-6">
-        <Select
-          label="Pilih Fakultas"
-          value={selectedId}
-          onChange={(e) => selectRule(e.target.value)}
-          options={rules.map(r => ({ value: r.id, label: r.fakultas }))}
-        />
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-6 flex flex-col sm:flex-row sm:items-end gap-3">
+        <div className="flex-1">
+          <Select
+            label="Pilih Fakultas"
+            value={selectedId}
+            onChange={(e) => selectRule(e.target.value)}
+            options={rules.map(r => ({ value: r.id, label: r.fakultas }))}
+          />
+        </div>
+        <Button variant="secondary" onClick={handleReset} disabled={saving}>
+          <RotateCcw className="w-4 h-4 mr-2" /> Reset ke Default
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -140,7 +230,40 @@ const PengaturanFakultas = () => {
               </div>
             ))}
           </div>
-          <p className="text-xs text-gray-500 mt-2">Nilai akhir dihitung otomatis dari bobot ini dan dikonversi ke skala mutu UNKLAB (A…F).</p>
+          <p className="text-xs text-gray-500 mt-2">Nilai akhir dihitung otomatis dari bobot ini dan dikonversi ke skala mutu di bawah.</p>
+        </div>
+      </div>
+
+      {/* Skala mutu */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-bold font-display text-slate-900">Skala Mutu Skripsi</h3>
+            <p className="text-xs text-gray-500">Batas bawah nilai untuk tiap huruf. Sesuaikan dengan Buku Pedoman UNKLAB bila berbeda.</p>
+          </div>
+          <Button variant="secondary" onClick={addScaleRow}><Plus className="w-4 h-4 mr-1" /> Tambah Huruf</Button>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          {(draft.grade_scale || []).map((s, idx) => (
+            <div key={idx} className="border border-slate-200 rounded-xl p-3 bg-slate-50">
+              <div className="flex items-center justify-between">
+                <input
+                  value={s.huruf}
+                  onChange={(e) => setScaleRow(idx, { huruf: e.target.value })}
+                  className="w-16 px-2 py-1.5 text-lg font-bold font-display text-slate-900 border border-slate-200 rounded-lg text-center"
+                  placeholder="A"
+                />
+                <button onClick={() => removeScaleRow(idx)} className="text-rose-500 hover:text-rose-700 p-1" aria-label="Hapus baris"><Trash2 className="w-4 h-4" /></button>
+              </div>
+              <label className="block text-[10px] uppercase tracking-wide text-slate-500 mt-2">Min. nilai</label>
+              <input
+                type="number"
+                value={s.min}
+                onChange={(e) => setScaleRow(idx, { min: e.target.value === '' ? '' : Number(e.target.value) })}
+                className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg"
+              />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -170,7 +293,7 @@ const PengaturanFakultas = () => {
 
       <div className="text-xs text-gray-500">
         <Info className="w-4 h-4 inline mr-1" />
-        Dynamic Faculty Rules: perubahan langsung berlaku di halaman Alur Skripsi tanpa mengubah kode program. Contoh: FKEP dapat membuat "Sertifikat Ethical Clearance" wajib, FAPERTA dapat mengaktifkan tahap Seminar Hasil.
+        Dynamic Faculty Rules berlaku tanpa mengubah kode. "Reset ke Default" mengembalikan satu fakultas ke template (FILKOM/FKEP/FKIP/FAPERTA).
       </div>
     </div>
   );

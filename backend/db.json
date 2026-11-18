@@ -254,6 +254,44 @@
       "checklist_dokumen": [
         "Link Repository / Source Code",
         "Video Demo Aplikasi"
+      ],
+      "grade_scale": [
+        {
+          "huruf": "A",
+          "min": 85
+        },
+        {
+          "huruf": "A-",
+          "min": 80
+        },
+        {
+          "huruf": "B+",
+          "min": 75
+        },
+        {
+          "huruf": "B",
+          "min": 70
+        },
+        {
+          "huruf": "B-",
+          "min": 65
+        },
+        {
+          "huruf": "C+",
+          "min": 60
+        },
+        {
+          "huruf": "C",
+          "min": 55
+        },
+        {
+          "huruf": "D",
+          "min": 50
+        },
+        {
+          "huruf": "E",
+          "min": 0
+        }
       ]
     },
     {
@@ -284,6 +322,44 @@
       ],
       "checklist_dokumen": [
         "Sertifikat Ethical Clearance"
+      ],
+      "grade_scale": [
+        {
+          "huruf": "A",
+          "min": 85
+        },
+        {
+          "huruf": "A-",
+          "min": 80
+        },
+        {
+          "huruf": "B+",
+          "min": 75
+        },
+        {
+          "huruf": "B",
+          "min": 70
+        },
+        {
+          "huruf": "B-",
+          "min": 65
+        },
+        {
+          "huruf": "C+",
+          "min": 60
+        },
+        {
+          "huruf": "C",
+          "min": 55
+        },
+        {
+          "huruf": "D",
+          "min": 50
+        },
+        {
+          "huruf": "E",
+          "min": 0
+        }
       ]
     },
     {
@@ -314,6 +390,44 @@
       ],
       "checklist_dokumen": [
         "Lembar Validasi Instrumen (Expert Judgment)"
+      ],
+      "grade_scale": [
+        {
+          "huruf": "A",
+          "min": 85
+        },
+        {
+          "huruf": "A-",
+          "min": 80
+        },
+        {
+          "huruf": "B+",
+          "min": 75
+        },
+        {
+          "huruf": "B",
+          "min": 70
+        },
+        {
+          "huruf": "B-",
+          "min": 65
+        },
+        {
+          "huruf": "C+",
+          "min": 60
+        },
+        {
+          "huruf": "C",
+          "min": 55
+        },
+        {
+          "huruf": "D",
+          "min": 50
+        },
+        {
+          "huruf": "E",
+          "min": 0
+        }
       ]
     },
     {
@@ -342,7 +456,45 @@
           "bobot": 40
         }
       ],
-      "checklist_dokumen": []
+      "checklist_dokumen": [],
+      "grade_scale": [
+        {
+          "huruf": "A",
+          "min": 85
+        },
+        {
+          "huruf": "A-",
+          "min": 80
+        },
+        {
+          "huruf": "B+",
+          "min": 75
+        },
+        {
+          "huruf": "B",
+          "min": 70
+        },
+        {
+          "huruf": "B-",
+          "min": 65
+        },
+        {
+          "huruf": "C+",
+          "min": 60
+        },
+        {
+          "huruf": "C",
+          "min": 55
+        },
+        {
+          "huruf": "D",
+          "min": 50
+        },
+        {
+          "huruf": "E",
+          "min": 0
+        }
+      ]
     }
   ],
   "workflow": [
@@ -390,7 +542,11 @@
       "lulus": false,
       "selesai_at": null,
       "carry_over": false,
-      "semester_baru": ""
+      "semester_baru": "",
+      "sempro_penguji": [],
+      "sidang_penguji": [],
+      "sempro_detail": {},
+      "nilai_detail": {}
     },
     {
       "id": 2,
@@ -434,7 +590,11 @@
       "lulus": false,
       "selesai_at": null,
       "carry_over": false,
-      "semester_baru": ""
+      "semester_baru": "",
+      "sempro_penguji": [],
+      "sidang_penguji": [],
+      "sempro_detail": {},
+      "nilai_detail": {}
     }
   ]
 }

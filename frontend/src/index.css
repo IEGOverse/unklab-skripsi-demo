@@ -12,6 +12,25 @@
   }
 }
 
+@media print {
+  body {
+    background: white !important;
+    background-image: none !important;
+    visibility: hidden;
+  }
+  .print-area, .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: fixed !important;
+    inset: 0 !important;
+    padding: 2rem !important;
+    background: white !important;
+    overflow: auto !important;
+    font-size: 12pt !important;
+  }
+}
+
 @layer components {
   .card {
     @apply bg-white rounded-2xl border border-slate-200/80 shadow-card p-6;
