@@ -20,6 +20,7 @@ const middlewares = jsonServer.defaults();
 // - Write /users hanya untuk admin (mencegah eskalasi privilege)
 // - Write /defense_schedules hanya untuk admin (konsisten dengan /api/schedules)
 // - DELETE pada entitas master hanya untuk admin
+// - Write /consultations hanya untuk admin & dosen (mahasiswa tidak bisa mengubah riwayat)
 const guardWrite = (req, res, next) => {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
     return next();
@@ -29,6 +30,9 @@ const guardWrite = (req, res, next) => {
 
   if (base === 'users' && role !== 'admin') {
     return res.status(403).json({ success: false, message: 'Hanya admin yang dapat mengubah data pengguna.' });
+  }
+  if (base === 'consultations' && role !== 'admin' && role !== 'dosen') {
+    return res.status(403).json({ success: false, message: 'Mahasiswa tidak dapat mengubah riwayat konsultasi.' });
   }
   if (base === 'defense_schedules' && role !== 'admin') {
     return res.status(403).json({ success: false, message: 'Hanya admin yang dapat mengubah jadwal defense.' });

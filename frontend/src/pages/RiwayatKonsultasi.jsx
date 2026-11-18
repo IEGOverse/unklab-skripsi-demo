@@ -48,6 +48,8 @@ const RiwayatKonsultasi = () => {
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
+  const isMahasiswa = user?.role === 'mahasiswa';
+
   const nameOf = (list, id) => {
     const x = list.find(i => String(i.id) === String(id));
     return x ? x.nama : id;
@@ -112,7 +114,10 @@ const RiwayatKonsultasi = () => {
     setForm({ student_id: '', lecturer_id: '', thesis_id: '', tanggal: '', topik: '', catatan: '', status: 'terjadwal' });
   };
 
+  const myStudent = isMahasiswa ? students.find(s => String(s.user_id) === String(user.id)) : null;
+
   const filtered = data.filter(d => {
+    if (isMahasiswa && String(d.student_id) !== String(myStudent?.id)) return false;
     if (statusFilter && d.status !== statusFilter) return false;
     const hay = [
       nameOf(students, d.student_id),
@@ -143,8 +148,12 @@ const RiwayatKonsultasi = () => {
     { label: 'Aksi', key: 'id', render: (r) => (
       <div className="flex gap-2 whitespace-nowrap">
         <button onClick={() => navigate(`/konsultasi/${r.id}`)} className="text-green-700 hover:underline text-xs">Detail</button>
-        <button onClick={() => handleEdit(r)} className="text-blue-600 hover:underline text-xs">Edit</button>
-        <button onClick={() => handleDelete(r.id)} className="text-red-600 hover:underline text-xs">Hapus</button>
+        {!isMahasiswa && (
+          <>
+            <button onClick={() => handleEdit(r)} className="text-blue-600 hover:underline text-xs">Edit</button>
+            <button onClick={() => handleDelete(r.id)} className="text-red-600 hover:underline text-xs">Hapus</button>
+          </>
+        )}
       </div>
     )},
   ];
@@ -160,9 +169,11 @@ const RiwayatKonsultasi = () => {
           <h1 className="text-2xl font-extrabold font-display text-slate-900 tracking-tight">Riwayat Konsultasi</h1>
           <p className="text-gray-600">Riwayat konsultasi mahasiswa-dosen pembimbing</p>
         </div>
-        <Button onClick={() => { resetForm(); setOpen(true); }} variant="primary">
-          <Plus className="w-4 h-4 mr-2" /> Tambah Konsultasi
-        </Button>
+        {!isMahasiswa && (
+          <Button onClick={() => { resetForm(); setOpen(true); }} variant="primary">
+            <Plus className="w-4 h-4 mr-2" /> Tambah Konsultasi
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col md:flex-row gap-2 md:items-center">
@@ -192,7 +203,7 @@ const RiwayatKonsultasi = () => {
       </Modal>
 
       <div className="text-xs text-gray-500 mt-2">
-        Catatan: Data ini adalah data uji (dummy), bukan data resmi UNKLAB. Akses disesuaikan dengan role Anda ({user.role}).
+        Catatan: Data ini adalah data uji (dummy), bukan data resmi UNKLAB. Akses disesuaikan dengan role Anda ({user.role}).{isMahasiswa ? ' Anda hanya dapat melihat riwayat bimbingan milik sendiri (read-only).' : ''}
       </div>
     </div>
   );

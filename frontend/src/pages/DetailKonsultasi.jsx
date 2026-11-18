@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { getConsultations, getStudents, getLecturers, getTheses } from '../api/api';
-import { ArrowLeft, FileText, User } from 'lucide-react';
+import { ArrowLeft, FileText, User, AlertTriangle } from 'lucide-react';
 
 const DetailKonsultasi = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [item, setItem] = useState(null);
+  const [studentsList, setStudentsList] = useState([]);
   const [student, setStudent] = useState(null);
   const [lecturer, setLecturer] = useState(null);
   const [thesis, setThesis] = useState(null);
@@ -20,6 +23,7 @@ const DetailKonsultasi = () => {
         ]);
         const consultations = r1.data?.data || r1.data || [];
         const students = r2.data?.data || r2.data || [];
+        setStudentsList(students);
         const lecturers = r3.data?.data || r3.data || [];
         const theses = r4.data?.data || r4.data || [];
         const row = consultations.find(x => String(x.id) === String(id));
@@ -36,6 +40,22 @@ const DetailKonsultasi = () => {
 
   if (loading) return <div className="text-center py-10 text-gray-500">Memuat detail...</div>;
   if (!item) return <div className="text-center py-10">Data tidak ditemukan.</div>;
+
+  // Mahasiswa hanya boleh melihat konsultasi miliknya sendiri
+  if (user.role === 'mahasiswa') {
+    const me = studentsList.find(x => String(x.user_id) === String(user.id));
+    const isOwn = me && String(me.id) === String(item.student_id);
+    if (!isOwn) {
+      return (
+        <div className="max-w-md mx-auto mt-16 text-center space-y-3">
+          <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
+          <h1 className="text-xl font-bold text-slate-900">Akses Ditolak</h1>
+          <p className="text-slate-600 text-sm">Anda hanya dapat melihat detail konsultasi milik Anda sendiri.</p>
+          <button onClick={() => navigate('/konsultasi')} className="text-blue-600 hover:underline text-sm">Kembali ke Riwayat Konsultasi</button>
+        </div>
+      );
+    }
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
