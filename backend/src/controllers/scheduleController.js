@@ -1,15 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, '../../db.json');
-
-function readDb() {
-  return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
-}
-
-function writeDb(data) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
-}
+const { db } = require('../services/dbStore');
 
 /**
  * GET /api/schedules/check-conflict
@@ -27,18 +16,14 @@ function checkConflict(req, res) {
       });
     }
 
-    const data = readDb();
-    const schedules = data.defense_schedules || [];
+    const schedules = db.get('defense_schedules').value() || [];
 
     const conflicts = schedules.filter(s => {
       if (excludeId && s.id == excludeId) return false;
       if (s.tanggal !== tanggal || s.waktu !== waktu) return false;
 
-      // Bentrok dosen penguji 1
       if (dosen_penguji_1_id && s.dosen_penguji_1_id == dosen_penguji_1_id) return true;
-      // Bentrok dosen penguji 2
       if (dosen_penguji_2_id && s.dosen_penguji_2_id == dosen_penguji_2_id) return true;
-      // Bentrok ruangan
       if (ruangan && s.ruangan == ruangan) return true;
 
       return false;
@@ -83,10 +68,8 @@ function createSchedule(req, res) {
       });
     }
 
-    const data = readDb();
-
-    // Cek bentrok sebelum menyimpan
-    const existing = data.defense_schedules || [];
+    // Cek bentrok sebelum menyimpan (pada data in-memory terbaru)
+    const existing = db.get('defense_schedules').value() || [];
     const conflict = existing.find(s =>
       s.tanggal === tanggal &&
       s.waktu === waktu &&
@@ -102,8 +85,17 @@ function createSchedule(req, res) {
       });
     }
 
+    const request = (db.get('defense_requests').value() || []).find(r => Number(r.id) === Number(defense_request_id));
+    if (!request) {
+      return res.status(404).json({ success: false, message: 'Pengajuan defense tidak ditemukan.' });
+    }
+    if (request.status !== 'diterima_dosen' && request.status !== 'disetujui') {
+      return res.status(409).json({ success: false, message: 'Pengajuan belum diterima dosen — tidak dapat dijadwalkan.' });
+    }
+
+    const maxId = existing.reduce((m, s) => Math.max(m, s.id || 0), 0);
     const newSchedule = {
-      id: existing.length > 0 ? Math.max(...existing.map(s => s.id)) + 1 : 1,
+      id: maxId + 1,
       defense_request_id: parseInt(defense_request_id),
       tanggal,
       waktu,
@@ -114,8 +106,13 @@ function createSchedule(req, res) {
       created_at: new Date().toISOString()
     };
 
-    data.defense_schedules.push(newSchedule);
-    writeDb(data);
+    db.get('defense_schedules').push(newSchedule).write();
+
+    // Tandai pengajuan defense sebagai disetujui (admin sudah jadwalkan)
+    db.get('defense_requests')
+      .find({ id: Number(defense_request_id) })
+      .assign({ status: 'disetujui' })
+      .write();
 
     res.status(201).json({
       success: true,
@@ -136,12 +133,11 @@ function createSchedule(req, res) {
  */
 function listSchedules(req, res) {
   try {
-    const data = readDb();
-    const schedules = data.defense_schedules || [];
-
-    // Join dengan data terkait untuk informasi lebih lengkap
-    const requests = data.defense_requests || [];
-    const lecturers = data.lecturers || [];
+    const schedules = db.get('defense_schedules').value() || [];
+    const requests = db.get('defense_requests').value() || [];
+    const lecturers = db.get('lecturers').value() || [];
+    const theses = db.get('theses').value() || [];
+    const students = db.get('students').value() || [];
 
     const result = schedules.map(s => {
       const request = requests.find(r => r.id == s.defense_request_id);
@@ -150,8 +146,8 @@ function listSchedules(req, res) {
 
       return {
         ...s,
-        thesis_title: request ? (data.theses || []).find(t => t.id == request.thesis_id)?.judul : null,
-        student_name: request ? (data.students || []).find(st => st.id == request.student_id)?.nama : null,
+        thesis_title: request ? theses.find(t => t.id == request.thesis_id)?.judul : null,
+        student_name: request ? students.find(st => st.id == request.student_id)?.nama : null,
         dosen_penguji_1_nama: penguji1 ? penguji1.nama : null,
         dosen_penguji_2_nama: penguji2 ? penguji2.nama : null
       };

@@ -9,6 +9,7 @@ import KeahlianDosen from './pages/KeahlianDosen';
 import DataSkripsi from './pages/DataSkripsi';
 import PengajuanDefense from './pages/PengajuanDefense';
 import AIRecommendasi from './pages/AIRecommendasi';
+import PersetujuanJadwal from './pages/PersetujuanJadwal';
 import AlurSkripsi from './pages/AlurSkripsi';
 import PengaturanFakultas from './pages/PengaturanFakultas';
 import PenjadwalanDefense from './pages/PenjadwalanDefense';
@@ -56,15 +57,16 @@ function App() {
           <Route path="/" element={<Page roles={['admin', 'dosen', 'mahasiswa']}><Dashboard /></Page>} />
           <Route path="/mahasiswa" element={<Page roles={['admin']}><DataMahasiswa /></Page>} />
           <Route path="/dosen" element={<Page roles={['admin']}><DataDosen /></Page>} />
-          <Route path="/keahlian" element={<Page roles={['admin', 'dosen']}><KeahlianDosen /></Page>} />
+          <Route path="/keahlian" element={<Page roles={['admin']}><KeahlianDosen /></Page>} />
           <Route path="/skripsi" element={<Page roles={['admin', 'mahasiswa']}><DataSkripsi /></Page>} />
           <Route path="/pengajuan-defense" element={<Page roles={['mahasiswa']}><PengajuanDefense /></Page>} />
-          <Route path="/alur-skripsi" element={<Page roles={['admin', 'dosen', 'mahasiswa']}><AlurSkripsi /></Page>} />
+          <Route path="/pengajuan-jadwal" element={<Page roles={['dosen']}><PersetujuanJadwal /></Page>} />
+          <Route path="/alur-skripsi" element={<Page roles={['admin', 'mahasiswa']}><AlurSkripsi /></Page>} />
           <Route path="/pengaturan-fakultas" element={<Page roles={['admin']}><PengaturanFakultas /></Page>} />
           <Route path="/ai-rekomendasi" element={<Page roles={['mahasiswa', 'admin']}><AIRecommendasi /></Page>} />
           <Route path="/jadwal-defense" element={<Page roles={['admin', 'dosen']}><PenjadwalanDefense /></Page>} />
-          <Route path="/konsultasi" element={<Page roles={['admin', 'dosen', 'mahasiswa']}><RiwayatKonsultasi /></Page>} />
-          <Route path="/konsultasi/:id" element={<Page roles={['admin', 'dosen', 'mahasiswa']}><DetailKonsultasi /></Page>} />
+          <Route path="/konsultasi" element={<Page roles={['admin', 'mahasiswa']}><RiwayatKonsultasi /></Page>} />
+          <Route path="/konsultasi/:id" element={<Page roles={['admin', 'mahasiswa']}><DetailKonsultasi /></Page>} />
           <Route path="/profil" element={<Page roles={['admin', 'dosen', 'mahasiswa']}><Profil /></Page>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
-  LayoutDashboard, Users, User, BookOpen, FileText, Calendar, Shield, LogOut, X, GraduationCap
+  LayoutDashboard, Users, User, BookOpen, FileText, Calendar, Shield, LogOut, X, GraduationCap, Inbox
 } from 'lucide-react';
 
 const menuItems = {
@@ -19,9 +19,7 @@ const menuItems = {
   ],
   dosen: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-    { label: 'Alur Skripsi', icon: GraduationCap, path: '/alur-skripsi' },
-    { label: 'Keahlian Dosen', icon: BookOpen, path: '/keahlian' },
-    { label: 'Konsultasi', icon: FileText, path: '/konsultasi' },
+    { label: 'Persetujuan Jadwal', icon: Inbox, path: '/pengajuan-jadwal' },
     { label: 'Jadwal Defense', icon: Calendar, path: '/jadwal-defense' },
     { label: 'Profil', icon: User, path: '/profil' },
   ],

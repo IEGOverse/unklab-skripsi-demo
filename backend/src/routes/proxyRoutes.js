@@ -3,14 +3,10 @@ const jsonServer = require('json-server');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
+const { db, DB_PATH } = require('../services/dbStore');
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, '../../db.json');
-
-// Router JSON Server untuk semua entitas di db.json
-// Endpoint: /api/users, /api/students, /api/lecturers, /api/lecturer_expertise,
-//           /api/theses, /api/consultations, /api/defense_requests,
-//           /api/defense_schedules, /api/lecturer_availability
-const apiRouter = jsonServer.router(DB_PATH);
+// Satu instance lowdb dipakai bersama: JSON Server & controller kustom & guard selalu konsisten.
+const apiRouter = jsonServer.router(db);
 
 // Middleware default json-server (body parser, etc.)
 const middlewares = jsonServer.defaults();
@@ -21,7 +17,7 @@ const middlewares = jsonServer.defaults();
 // - Write /users hanya untuk admin (mencegah eskalasi privilege)
 // - Write /defense_schedules hanya untuk admin (konsisten dengan /api/schedules)
 // - DELETE pada entitas master hanya untuk admin
-// - Write /consultations hanya untuk admin & dosen (mahasiswa tidak bisa mengubah riwayat)
+// - Write /consultations hanya untuk admin (dosen fokus pada keputusan pengajuan jadwal)
 const guardWrite = (req, res, next) => {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
     return next();
@@ -61,11 +57,37 @@ const guardWrite = (req, res, next) => {
     return res.status(403).json({ success: false, message: 'Akses ditolak.' });
   }
 
+  // ===== Aturan khusus pengajuan defense (Mahasiswa ajukan → Dosen terima/tolak → Admin jadwalkan) =====
+  if (base === 'defense_requests') {
+    if (role === 'admin' || role === 'dosen') return next();
+    if (role === 'mahasiswa') {
+      let db;
+      try { db = JSON.parse(fs.readFileSync(DB_PATH, 'utf8')); } catch (e) { return res.status(500).json({ success: false, message: 'Gagal membaca database.' }); }
+      const me = (db.students || []).find(s => String(s.user_id) === String(req.user.id));
+
+      // POST: mahasiswa hanya boleh mengajukan, status dikunci 'pending'
+      if (req.method === 'POST') {
+        if (!me) return res.status(403).json({ success: false, message: 'Akun Anda tidak terhubung ke data mahasiswa.' });
+        req.body = {
+          ...req.body,
+          student_id: me.id,
+          status: 'pending',
+          alasan_admin: null,
+          alasan_dosen: null,
+          created_at: req.body.created_at || new Date().toISOString(),
+        };
+        return next();
+      }
+      return res.status(403).json({ success: false, message: 'Mahasiswa tidak dapat mengubah atau menghapus pengajuan defense.' });
+    }
+    return res.status(403).json({ success: false, message: 'Akses ditolak.' });
+  }
+
   if (base === 'users' && role !== 'admin') {
     return res.status(403).json({ success: false, message: 'Hanya admin yang dapat mengubah data pengguna.' });
   }
-  if (base === 'consultations' && role !== 'admin' && role !== 'dosen') {
-    return res.status(403).json({ success: false, message: 'Mahasiswa tidak dapat mengubah riwayat konsultasi.' });
+  if (base === 'consultations' && role !== 'admin') {
+    return res.status(403).json({ success: false, message: 'Hanya admin yang dapat mengubah riwayat konsultasi.' });
   }
   if (base === 'defense_schedules' && role !== 'admin') {
     return res.status(403).json({ success: false, message: 'Hanya admin yang dapat mengubah jadwal defense.' });
@@ -96,21 +118,22 @@ const stripPasswordHash = (req, res, next) => {
   next();
 };
 
-// Mahasiswa hanya boleh membaca skripsi miliknya (server-side scoping, bukan sekadar UI)
+// Mahasiswa hanya boleh membaca skripsi & pengajuan defense miliknya (server-side scoping)
 const scopeThesesRead = (req, res, next) => {
   if (req.method !== 'GET') return next();
   const parts = req.path.split('/').filter(Boolean);
-  if (parts[0] !== 'theses') return next(); // hanya /theses & /theses/:id
+  const base = parts[0];
+  if (base !== 'theses' && base !== 'defense_requests') return next();
   const role = req.user?.role;
   if (role !== 'mahasiswa') return next();
   try {
     const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
     const me = (db.students || []).find(s => String(s.user_id) === String(req.user.id));
-    const mine = me ? (db.theses || []).filter(t => Number(t.student_id) === Number(me.id)) : [];
+    const mine = me ? (db[base] || []).filter(t => Number(t.student_id) === Number(me.id)) : [];
     if (parts.length === 1) return res.jsonp(mine);
     const id = Number(parts[1]);
     const found = mine.find(t => Number(t.id) === id);
-    return found ? res.jsonp(found) : res.status(404).json({ success: false, message: 'Skripsi tidak ditemukan / bukan milik Anda.' });
+    return found ? res.jsonp(found) : res.status(404).json({ success: false, message: 'Data tidak ditemukan / bukan milik Anda.' });
   } catch (e) {
     return res.status(500).json({ success: false, message: 'Gagal membaca database.' });
   }

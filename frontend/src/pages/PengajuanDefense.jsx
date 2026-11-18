@@ -20,7 +20,7 @@ const PengajuanDefense = () => {
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ thesis_id: '', topik_ai: '', bidang_ai: '', dosen_rekomendasi_id: '' });
+  const [form, setForm] = useState({ thesis_id: '', topik_ai: '', bidang_ai: '', dosen_rekomendasi_id: '', tanggal_diusulkan: '', waktu_diusulkan: '', catatan_mahasiswa: '' });
   const [search, setSearch] = useState('');
 
   useEffect(() => { load(); }, []);
@@ -71,12 +71,16 @@ const PengajuanDefense = () => {
         topik_ai: form.topik_ai,
         bidang_ai: form.bidang_ai,
         dosen_rekomendasi_id: form.dosen_rekomendasi_id ? Number(form.dosen_rekomendasi_id) : null,
+        tanggal_diusulkan: form.tanggal_diusulkan,
+        waktu_diusulkan: form.waktu_diusulkan,
+        catatan_mahasiswa: form.catatan_mahasiswa,
         status: 'pending',
         alasan_admin: null,
+        alasan_dosen: null,
         created_at: new Date().toISOString(),
       });
       setOpen(false);
-      setForm({ thesis_id: '', topik_ai: '', bidang_ai: '', dosen_rekomendasi_id: '' });
+      setForm({ thesis_id: '', topik_ai: '', bidang_ai: '', dosen_rekomendasi_id: '', tanggal_diusulkan: '', waktu_diusulkan: '', catatan_mahasiswa: '' });
       load();
     } catch (e) {
       alert('Gagal mengajukan: ' + (e.response?.data?.message || e.message));
@@ -107,12 +111,28 @@ const PengajuanDefense = () => {
     { label: 'Topik AI', key: 'topik_ai' },
     { label: 'Bidang AI', key: 'bidang_ai' },
     { label: 'Dosen Rekomendasi', key: 'dosen_rekomendasi_id', render: (r) => lecturerName(r.dosen_rekomendasi_id) },
+    { label: 'Diusulkan', key: 'tanggal_diusulkan', render: (r) => (
+      <div className="text-sm">
+        <div>{r.tanggal_diusulkan || '-'}</div>
+        <div className="text-xs text-gray-500">{r.waktu_diusulkan || ''}</div>
+      </div>
+    )},
     { label: 'Status', key: 'status', render: (r) => (
-      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-        r.status === 'disetujui' ? 'bg-green-100 text-green-800' :
-        r.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-        r.status === 'ditolak' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
-      }`}>{r.status}</span>
+      <div>
+        <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
+          r.status === 'disetujui' || r.status === 'diterima_dosen' ? 'bg-green-100 text-green-800' :
+          r.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+          r.status === 'ditolak_dosen' || r.status === 'ditolak' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+        }`}>{
+          r.status === 'pending' ? 'Menunggu Dosen' :
+          r.status === 'diterima_dosen' ? 'Diterima Dosen' :
+          r.status === 'ditolak_dosen' ? 'Ditolak Dosen' :
+          r.status === 'disetujui' ? 'Disetujui (Admin)' : r.status
+        }</span>
+        {r.status === 'ditolak_dosen' && r.alasan_dosen && (
+          <div className="text-[10px] text-red-600 mt-1 max-w-[220px]">Alasan: {r.alasan_dosen}</div>
+        )}
+      </div>
     )},
   ];
 
@@ -158,6 +178,11 @@ const PengajuanDefense = () => {
           <Input label="Topik AI" value={form.topik_ai} onChange={(e) => setForm({ ...form, topik_ai: e.target.value })} required />
           <Input label="Bidang AI" value={form.bidang_ai} onChange={(e) => setForm({ ...form, bidang_ai: e.target.value })} required />
           <Select label="Dosen Rekomendasi (opsional)" value={form.dosen_rekomendasi_id} onChange={(e) => setForm({ ...form, dosen_rekomendasi_id: e.target.value })} options={lecturerOptions} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input label="Usulan Tanggal Defense" type="date" value={form.tanggal_diusulkan} onChange={(e) => setForm({ ...form, tanggal_diusulkan: e.target.value })} required />
+            <Input label="Usulan Waktu" type="time" value={form.waktu_diusulkan} onChange={(e) => setForm({ ...form, waktu_diusulkan: e.target.value })} required />
+          </div>
+          <Input label="Catatan untuk Dosen (opsional)" value={form.catatan_mahasiswa} onChange={(e) => setForm({ ...form, catatan_mahasiswa: e.target.value })} placeholder="Alasan/preferensi jadwal..." />
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setOpen(false)}>Batal</Button>
             <Button type="submit" disabled={loading}>Ajukan</Button>

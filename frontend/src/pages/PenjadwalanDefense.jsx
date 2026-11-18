@@ -112,7 +112,8 @@ const PenjadwalanDefense = () => {
     )},
   ];
 
-  const requestOptions = requests.map(r => ({ value: r.id, label: requestLabel(r) }));
+  const acceptedRequests = requests.filter(r => r.status === 'diterima_dosen' || r.status === 'disetujui');
+  const requestOptions = acceptedRequests.map(r => ({ value: r.id, label: `${requestLabel(r)} — ${r.status === 'disetujui' ? 'Disetujui (Jadwal dibuat)' : 'Diterima Dosen'}` }));
   const lecturerOptions = lecturers.map(l => ({ value: l.id, label: l.nama }));
 
   return (
@@ -133,7 +134,12 @@ const PenjadwalanDefense = () => {
 
       <Modal isOpen={open} onClose={() => setOpen(false)} title="Tetapkan Jadwal Defense">
         <form onSubmit={handleSave} className="space-y-4">
-          <Select label="Pengajuan Defense" value={form.defense_request_id} onChange={(e) => setForm({ ...form, defense_request_id: e.target.value })} options={requestOptions} required />
+          {acceptedRequests.length === 0 && (
+            <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
+              Belum ada pengajuan yang diterima dosen. Minta mahasiswa mengajukan defense — dosen memeriksa & menerima terlebih dahulu.
+            </div>
+          )}
+          <Select label="Pengajuan Defense (hanya yang diterima dosen)" value={form.defense_request_id} onChange={(e) => setForm({ ...form, defense_request_id: e.target.value })} options={requestOptions} required />
           <Input label="Tanggal" type="date" value={form.tanggal} onChange={(e) => setForm({ ...form, tanggal: e.target.value })} required />
           <Input label="Waktu" type="time" value={form.waktu} onChange={(e) => setForm({ ...form, waktu: e.target.value })} required />
           <Input label="Ruangan" value={form.ruangan} onChange={(e) => setForm({ ...form, ruangan: e.target.value })} required />
