@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  getWorkflows, getTheses, getStudents, getConsultations, getFacultyRules, updateWorkflow,
+  getWorkflows, getTheses, getStudents, getConsultations, getFacultyRules, getLecturers, updateWorkflow,
 } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
@@ -25,6 +25,7 @@ const BimbinganSaya = () => {
   const [students, setStudents] = useState([]);
   const [consultations, setConsultations] = useState([]);
   const [rules, setRules] = useState([]);
+  const [lecturers, setLecturers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
@@ -33,8 +34,8 @@ const BimbinganSaya = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const [rWf, rTh, rSt, rC, rR] = await Promise.all([
-        getWorkflows(), getTheses(), getStudents(), getConsultations(), getFacultyRules(),
+      const [rWf, rTh, rSt, rC, rR, rL] = await Promise.all([
+        getWorkflows(), getTheses(), getStudents(), getConsultations(), getFacultyRules(), getLecturers(),
       ]);
       const norm = (r) => r.data?.data || r.data || [];
       setWorkflows(norm(rWf));
@@ -42,11 +43,13 @@ const BimbinganSaya = () => {
       setStudents(norm(rSt));
       setConsultations(norm(rC));
       setRules(norm(rR));
+      setLecturers(norm(rL));
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
-  // Untuk demo: dosen_a = lecturer id 1, dosen_b = lecturer id 2
-  const myLecturerId = user.username === 'dosen_a' ? 1 : 2;
+  // Dosen yang sedang login — cocokkan lewat user_id lecturer record
+  const meAsLecturer = lecturers.find(l => String(l.user_id) === String(user.id));
+  const myLecturerId = meAsLecturer?.id;
 
   const mine = workflows.filter(w =>
     String(w.pembimbing_1_id) === String(myLecturerId) || String(w.pembimbing_2_id) === String(myLecturerId)
