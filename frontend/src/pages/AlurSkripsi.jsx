@@ -46,7 +46,7 @@ const jaccard = (a, b) => {
 
 const avg = (arr) => {
   const nums = arr.map(Number).filter(n => !isNaN(n));
-  return nums.length ? Math.round(nums.reduce((a, b) => a + b, 0) * 100) / 100 : null;
+  return nums.length ? Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 100) / 100 : null;
 };
 
 const AlurSkripsi = () => {
