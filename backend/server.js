@@ -16,6 +16,17 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'db.json');
 
+// Auto-seed untuk volume persisten: jika DB_PATH diset via env dan file belum ada,
+// salin dari seed repo (backend/db.json) supaya data demo mulai dari kondisi bersih
+if (process.env.DB_PATH && !fs.existsSync(DB_PATH)) {
+  const seed = path.join(__dirname, 'db.json');
+  if (fs.existsSync(seed)) {
+    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+    fs.copyFileSync(seed, DB_PATH);
+    console.log('🌱 DB_PATH belum ada — seed disalin dari', seed);
+  }
+}
+
 // Middleware
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json());
