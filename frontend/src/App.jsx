@@ -9,6 +9,7 @@ import KeahlianDosen from './pages/KeahlianDosen';
 import PengajuanDefense from './pages/PengajuanDefense';
 import AIRecommendasi from './pages/AIRecommendasi';
 import PersetujuanJadwal from './pages/PersetujuanJadwal';
+import BimbinganSaya from './pages/BimbinganSaya';
 import AlurSkripsi from './pages/AlurSkripsi';
 import PengaturanFakultas from './pages/PengaturanFakultas';
 import PenjadwalanDefense from './pages/PenjadwalanDefense';
@@ -60,6 +61,7 @@ function App() {
           <Route path="/skripsi" element={<Navigate to="/alur-skripsi" replace />} />
           <Route path="/pengajuan-defense" element={<Page roles={['mahasiswa']}><PengajuanDefense /></Page>} />
           <Route path="/pengajuan-jadwal" element={<Page roles={['dosen']}><PersetujuanJadwal /></Page>} />
+          <Route path="/bimbingan-saya" element={<Page roles={['dosen']}><BimbinganSaya /></Page>} />
           <Route path="/alur-skripsi" element={<Page roles={['admin', 'mahasiswa']}><AlurSkripsi /></Page>} />
           <Route path="/pengaturan-fakultas" element={<Page roles={['admin']}><PengaturanFakultas /></Page>} />
           <Route path="/ai-rekomendasi" element={<Page roles={['mahasiswa', 'admin']}><AIRecommendasi /></Page>} />

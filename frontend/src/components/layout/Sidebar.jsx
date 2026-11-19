@@ -18,6 +18,7 @@ const menuItems = {
   ],
   dosen: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
+    { label: 'Bimbingan Saya', icon: GraduationCap, path: '/bimbingan-saya' },
     { label: 'Persetujuan Jadwal', icon: Inbox, path: '/pengajuan-jadwal' },
     { label: 'Jadwal Defense', icon: Calendar, path: '/jadwal-defense' },
     { label: 'Profil', icon: User, path: '/profil' },
