@@ -66,6 +66,9 @@ const AlurSkripsi = () => {
   const [semesterBaru, setSemesterBaru] = useState('');
   const [judulBaru, setJudulBaru] = useState(['', '', '']);
   const [abstrak, setAbstrak] = useState('');
+  const [pilihanJudul, setPilihanJudul] = useState('');
+  const [pilihanPembimbing1, setPilihanPembimbing1] = useState('');
+  const [pilihanPembimbing2, setPilihanPembimbing2] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
 
@@ -100,6 +103,9 @@ const AlurSkripsi = () => {
         setWfDraft(JSON.parse(JSON.stringify(pick)));
         setActiveStage(pick.stage || 1);
         setJudulBaru(pick.judul_pilihan?.length ? [...pick.judul_pilihan] : ['', '', '']);
+        setPilihanJudul('');
+        setPilihanPembimbing1('');
+        setPilihanPembimbing2('');
         const pickThesis = pick?.thesis_id ? norm(rTh).find(t => t.id === pick.thesis_id) : null;
         setAbstrak(pickThesis?.abstrak || '');
       }
@@ -138,15 +144,17 @@ const AlurSkripsi = () => {
     return 9;
   }, [done]);
 
-  const similarity = useMemo(() => {
-    if (!wf?.judul_final) return null;
+  // Hitung kesamaan dengan arsip judul (exclude tesis sendiri)
+  const similarityJudul = useMemo(() => {
+    const candidate = (pilihanJudul || wf?.judul_final || '').trim();
+    if (!candidate) return null;
     let best = 0;
     theses.forEach(t => {
-      if (t.id === wf.thesis_id) return;
-      best = Math.max(best, jaccard(wf.judul_final, t.judul));
+      if (t.id === wf?.thesis_id) return;
+      best = Math.max(best, jaccard(candidate, t.judul));
     });
     return best;
-  }, [wf?.judul_final, theses, wf?.thesis_id]);
+  }, [pilihanJudul, wf?.judul_final, theses, wf?.thesis_id]);
 
   // Hitung nilai rata-rata sempro & sidang — seluruh penguji terdata
   const semproPengujiIds = wf?.sempro_penguji || [];
@@ -221,7 +229,10 @@ const AlurSkripsi = () => {
   };
 
   const handleTerbitkanSK = async () => {
-    if (!wf.judul_final || !wf.pembimbing_1_id || !wf.pembimbing_2_id || wf.pembimbing_1_id === wf.pembimbing_2_id) {
+    const finalJudul = pilihanJudul || wf.judul_final;
+    const p1 = pilihanPembimbing1 !== '' ? Number(pilihanPembimbing1) : Number(wf.pembimbing_1_id);
+    const p2 = pilihanPembimbing2 !== '' ? Number(pilihanPembimbing2) : Number(wf.pembimbing_2_id);
+    if (!finalJudul || !p1 || !p2 || p1 === p2) {
       setMessage({ type: 'error', text: 'Pilih judul final dan 2 pembimbing berbeda.' });
       return;
     }
@@ -229,7 +240,7 @@ const AlurSkripsi = () => {
     setMessage(null);
     try {
       let thesis = wf.thesis_id ? theses.find(t => t.id === wf.thesis_id) : null;
-      const payload = { judul: wf.judul_final, abstrak, status: 'disetujui' };
+      const payload = { judul: finalJudul, abstrak, status: 'disetujui' };
       if (thesis) {
         await updateThesis(thesis.id, { ...thesis, ...payload });
       } else {
@@ -238,13 +249,16 @@ const AlurSkripsi = () => {
         thesis = created;
       }
       await persist({
-        judul_final: wf.judul_final,
-        pembimbing_1_id: Number(wf.pembimbing_1_id),
-        pembimbing_2_id: Number(wf.pembimbing_2_id),
+        judul_final: finalJudul,
+        pembimbing_1_id: p1,
+        pembimbing_2_id: p2,
         sk_tanggal: new Date().toLocaleDateString('id-ID'),
         stage: 3,
         thesis_id: thesis?.id ?? wf.thesis_id,
       });
+      setPilihanJudul('');
+      setPilihanPembimbing1('');
+      setPilihanPembimbing2('');
     } catch (e) {
       setMessage({ type: 'error', text: 'Gagal menerbitkan SK: ' + (e.response?.data?.message || e.message) });
     } finally { setSaving(false); }
@@ -303,6 +317,9 @@ const AlurSkripsi = () => {
       setActiveStage(target.stage || 1);
       setMessage(null);
       setJudulBaru(target.judul_pilihan?.length ? [...target.judul_pilihan] : ['', '', '']);
+      setPilihanJudul('');
+      setPilihanPembimbing1('');
+      setPilihanPembimbing2('');
       const targetThesis = target.thesis_id ? theses.find(t => t.id === target.thesis_id) : null;
       setAbstrak(targetThesis?.abstrak || '');
     }
@@ -477,18 +494,18 @@ const AlurSkripsi = () => {
                       <p className="text-[11px] uppercase tracking-wider text-green-700 font-semibold">Judul Terpilih (SK)</p>
                       <p className="font-bold text-green-900">{wf.judul_final}</p>
                       <p className="text-xs text-green-800 mt-1">Pembimbing I: {lecturerName(wf.pembimbing_1_id)} · Pembimbing II: {lecturerName(wf.pembimbing_2_id)} · SK {wf.sk_tanggal || '-'}</p>
-                      {similarity != null && <p className="text-xs text-green-800 mt-0.5">Kemiripan dengan arsip: {similarity}%</p>}
+                      {similarityJudul != null && <p className="text-xs text-green-800 mt-0.5">Kemiripan dengan arsip: {similarityJudul}%</p>}
                       <button onClick={() => window.print()} className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-blue-700 hover:text-blue-900 border border-blue-200 rounded-lg px-3 py-1.5 bg-white"><Printer className="w-4 h-4" /> Cetak SK Penetapan</button>
                     </div>
                   )}
                   {isAdmin && !wf.judul_final && wf.judul_pilihan?.length > 0 && (
                     <div className="mt-4 space-y-4 border-t pt-4">
-                      <Select label="Tetapkan Judul Final" value={wf.judul_final || ''} onChange={(e) => setWfDraft({ ...wf, judul_final: e.target.value })} options={wf.judul_pilihan.map(j => ({ value: j, label: j }))} />
-                      <p className="text-sm font-semibold text-slate-700">Kemiripan dengan arsip judul: <span className={(similarity ?? 0) > 50 ? 'text-red-600' : 'text-green-700'}>{similarity ?? '-'}%</span></p>
-                      {similarity != null && similarity > 50 && <p className="text-xs text-red-600 flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> Judul sangat mirip dengan arsip — Kaprodi tetap dapat menerbitkan SK dengan pertimbangan.</p>}
+                      <Select label="Tetapkan Judul Final" value={pilihanJudul} onChange={(e) => setPilihanJudul(e.target.value)} options={wf.judul_pilihan.map(j => ({ value: j, label: j }))} />
+                      <p className="text-sm font-semibold text-slate-700">Kemiripan dengan arsip judul: <span className={(similarityJudul ?? 0) > 50 ? 'text-red-600' : 'text-green-700'}>{similarityJudul ?? '-'}%</span></p>
+                      {similarityJudul != null && similarityJudul > 50 && <p className="text-xs text-red-600 flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> Judul sangat mirip dengan arsip — Kaprodi tetap dapat menerbitkan SK dengan pertimbangan.</p>}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <Select label="Pembimbing I" value={wf.pembimbing_1_id || ''} onChange={(e) => setWfDraft({ ...wf, pembimbing_1_id: Number(e.target.value) })} options={lecturers.map(l => ({ value: l.id, label: l.nama }))} />
-                        <Select label="Pembimbing II" value={wf.pembimbing_2_id || ''} onChange={(e) => setWfDraft({ ...wf, pembimbing_2_id: Number(e.target.value) })} options={lecturers.map(l => ({ value: l.id, label: l.nama }))} />
+                        <Select label="Pembimbing I" value={pilihanPembimbing1} onChange={(e) => setPilihanPembimbing1(e.target.value)} options={lecturers.map(l => ({ value: l.id, label: l.nama }))} />
+                        <Select label="Pembimbing II" value={pilihanPembimbing2} onChange={(e) => setPilihanPembimbing2(e.target.value)} options={lecturers.map(l => ({ value: l.id, label: l.nama }))} />
                       </div>
                       <Button onClick={handleTerbitkanSK} className="w-full"><FileSignature className="w-4 h-4 mr-2" /> Terbitkan SK Judul & Pembimbing</Button>
                     </div>
