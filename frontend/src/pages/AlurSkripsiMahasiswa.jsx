@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   getWorkflows, updateWorkflow, getTheses, getStudents, getConsultations, getFacultyRules, getLecturers,
   createThesis, updateThesis,
@@ -26,6 +26,7 @@ const AlurSkripsiMahasiswa = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
+  const checklistRef = useRef([]);
 
   // Form state
   const [judul1, setJudul1] = useState('');
@@ -66,6 +67,7 @@ const AlurSkripsiMahasiswa = () => {
         setDrafLink(mine.draf_link || '');
         setIzinLink(mine.izin_syarat_link || '');
         setChecklist(mine.checklist_checked || []);
+        checklistRef.current = mine.checklist_checked || [];
         setTurnitin(mine.turnitin_score ?? '');
         setBebakPustaka(!!mine.bebas_pustaka);
         setBebakBusinessOffice(!!mine.bebas_business_office);
@@ -168,7 +170,10 @@ const AlurSkripsiMahasiswa = () => {
   };
 
   const handleToggleChecklist = async (label) => {
-    const next = checklist.includes(label) ? checklist.filter(x => x !== label) : [...checklist, label];
+    // Gunakan ref agar toggle beruntun tidak memakai state basi (race condition)
+    const cur = checklistRef.current;
+    const next = cur.includes(label) ? cur.filter(x => x !== label) : [...cur, label];
+    checklistRef.current = next;
     setChecklist(next);
     try {
       await updateWorkflow(wf.id, { checklist_checked: next });
