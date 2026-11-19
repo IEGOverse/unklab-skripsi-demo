@@ -52,6 +52,8 @@ const BimbinganSaya = () => {
     String(w.pembimbing_1_id) === String(myLecturerId) || String(w.pembimbing_2_id) === String(myLecturerId)
   );
 
+  const history = mine.filter(w => !!w.bimbingan_proposal_acc || !!w.acc_sidang);
+
   const thesisOf = (id) => theses.find(t => t.id === id);
   const studentOf = (id) => students.find(s => s.id === id);
   const ruleOf = (fakultas) => rules.find(r => r.fakultas === fakultas) || {};
@@ -147,6 +149,37 @@ const BimbinganSaya = () => {
             </div>
           );
         })
+      )}
+
+      {/* Riwayat Persetujuan Saya */}
+      {history.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-6">
+          <h3 className="font-bold font-display text-slate-900 mb-3">Riwayat Persetujuan Saya</h3>
+          <div className="divide-y divide-slate-100">
+            {history.map(w => {
+              const thesis = thesisOf(w.thesis_id);
+              const student = studentOf(thesis?.student_id);
+              const actions = [];
+              if (w.bimbingan_proposal_acc) actions.push('ACC Bimbingan Proposal');
+              if (w.acc_sidang) actions.push('ACC Sidang Akhir');
+              return (
+                <div key={w.id} className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{student?.nama || 'Mahasiswa'}</p>
+                    <p className="text-xs text-slate-500">{thesis?.judul}</p>
+                  </div>
+                  <div className="text-xs text-slate-600 flex flex-wrap gap-2">
+                    {actions.map(a => (
+                      <span key={a} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                        <CheckCircle2 className="w-3 h-3" /> {a}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );

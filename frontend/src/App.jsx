@@ -51,6 +51,8 @@ const Page = ({ roles, children }) => (
 
 const AlurSkripsiDispatcher = () => {
   const { user } = useAuth();
+  // Dosen tidak melihat full alur skripsi mahasiswa — hanya ACC di Bimbingan Saya
+  if (user?.role === 'dosen') return <Navigate to="/bimbingan-saya" replace />;
   const Comp = user?.role === 'mahasiswa' ? AlurSkripsiMahasiswa : AlurSkripsi;
   return <Comp />;
 };
