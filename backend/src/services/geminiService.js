@@ -24,13 +24,14 @@ async function analyzeTopic(judul, abstrak) {
   }
 
   try {
+    const preferred = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+    // Rantai fallback: model utama (bisa overload/503) → lite → preview. Semua punya per-coba timeout 12s.
+    const modelChain = [...new Set([preferred, 'gemini-3.5-flash-lite', 'gemini-3-flash-preview'])];
     const genAI = new GoogleGenerativeAI(API_KEY);
-    const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
-    const model = genAI.getGenerativeModel({ model: modelName });
-    // Timeout 15 detik agar request tidak menggantung — fallback analisis dipakai
+    // Timeout 12 detik per model agar request tidak menggantung — fallback analisis dipakai jika semua gagal
     const withTimeout = (p) => Promise.race([
       p,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini timeout (15s)')), 15000)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini timeout (12s)')), 12000)),
     ]);
 
     const prompt = `
@@ -50,22 +51,33 @@ Berikan output JSON dengan struktur:
 Pastikan output adalah JSON murni tanpa teks tambahan.
 `;
 
-    const result = await withTimeout(model.generateContent(prompt));
-    const response = await result.response;
-    const text = response.text();
+    let lastErr = null;
+    for (const modelName of modelChain) {
+      try {
+        console.log('Gemini: mencoba model', modelName);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await withTimeout(model.generateContent(prompt));
+        const response = await result.response;
+        const text = response.text();
 
-    // Coba parse JSON dari respons
-    try {
-      const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      return JSON.parse(cleanText);
-    } catch (parseErr) {
-      // Jika gagal parse, coba ekstrak dengan regex
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+        // Coba parse JSON dari respons
+        try {
+          const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+          return JSON.parse(cleanText);
+        } catch (parseErr) {
+          // Jika gagal parse, coba ekstrak dengan regex
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+          }
+          throw new Error('Gagal memparsing respons Gemini');
+        }
+      } catch (err) {
+        lastErr = err;
+        console.error('Gemini model gagal:', modelName, '-', err.message);
       }
-      throw new Error('Gagal memparsing respons Gemini');
     }
+    throw lastErr || new Error('Semua model Gemini gagal');
   } catch (err) {
     console.error('Gemini API error:', err.message);
     return getFallbackAnalysis(judul, abstrak);
