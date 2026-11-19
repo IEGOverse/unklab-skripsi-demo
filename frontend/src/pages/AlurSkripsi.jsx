@@ -607,7 +607,7 @@ const AlurSkripsi = () => {
               {wf.sempro_nilai != null && wf.sempro_nilai < 60 && (
                 <div className="mt-4 p-3 rounded-xl bg-red-50 border border-red-200">
                   <p className="text-sm text-red-700 font-semibold flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Mahasiswa MENGULANG Sempro ({wf.sempro_nilai})</p>
-                  {isAdmin && <Button variant="secondary" className="mt-2" onClick={() => persist({ status: 'berjalan', sempro_nilai: null, revisi_sempro_verified: false, sempro_detail: {} })}>Jadwalkan Ulang Sempro</Button>}
+                  {isAdmin && <Button variant="secondary" className="mt-2" onClick={() => persist({ status: 'berjalan', sempro_nilai: null, revisi_sempro_verified: false, sempro_detail: {}, stage: 4 })}>Jadwalkan Ulang Sempro</Button>}
                 </div>
               )}
               {wf.sempro_nilai != null && (
@@ -792,7 +792,7 @@ const AlurSkripsi = () => {
               {wf.nilai_huruf === 'E' && (
                 <div className="mt-4 p-3 rounded-xl bg-red-50 border border-red-200">
                   <p className="text-sm text-red-700 font-semibold flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Mahasiswa MENGULANG Sidang (nilai {wf.nilai_akhir})</p>
-                  {isAdmin && <Button variant="secondary" className="mt-2" onClick={() => persist({ status: 'berjalan', nilai_akhir: null, nilai_huruf: null, nilai_detail: {} })}>Jadwalkan Ulang Sidang</Button>}
+                  {isAdmin && <Button variant="secondary" className="mt-2" onClick={() => persist({ status: 'berjalan', nilai_akhir: null, nilai_huruf: null, nilai_detail: {}, stage: 8 })}>Jadwalkan Ulang Sidang</Button>}
                 </div>
               )}
               {wf.nilai_akhir != null && wf.nilai_huruf !== 'E' && <p className="mt-4 text-sm text-green-700 font-semibold flex items-center gap-2"><CheckCircle2 className="w-5 h-5" /> LULUS sidang — lanjut repositori</p>}
