@@ -9,15 +9,15 @@ const statCards = {
     { label: 'Mahasiswa', icon: User, key: 'students', from: 'from-emerald-500', to: 'to-teal-400' },
     { label: 'Dosen', icon: User, key: 'lecturers', from: 'from-violet-500', to: 'to-purple-400' },
     { label: 'Skripsi', icon: BookOpen, key: 'theses', from: 'from-orange-500', to: 'to-amber-400' },
-    { label: 'Pengajuan Defense', icon: FileText, key: 'defense_requests', from: 'from-rose-500', to: 'to-red-400' },
+    { label: 'Pendaftaran Sidang', icon: FileText, key: 'defense_requests', from: 'from-rose-500', to: 'to-red-400' },
   ],
   dosen: [
     { label: 'Skripsi Bimbingan', icon: BookOpen, key: 'theses', from: 'from-blue-500', to: 'to-cyan-400' },
-    { label: 'Jadwal Defense', icon: Calendar, key: 'defense_schedules', from: 'from-emerald-500', to: 'to-teal-400' },
+    { label: 'Jadwal Sidang', icon: Calendar, key: 'defense_schedules', from: 'from-emerald-500', to: 'to-teal-400' },
   ],
   mahasiswa: [
     { label: 'Skripsi Saya', icon: BookOpen, key: 'theses', from: 'from-blue-500', to: 'to-cyan-400' },
-    { label: 'Pengajuan Defense', icon: FileText, key: 'defense_requests', from: 'from-emerald-500', to: 'to-teal-400' },
+    { label: 'Pendaftaran Sidang', icon: FileText, key: 'defense_requests', from: 'from-emerald-500', to: 'to-teal-400' },
   ],
 };
 

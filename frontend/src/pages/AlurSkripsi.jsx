@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   getWorkflows, updateWorkflow, getTheses, getStudents, getConsultations, getFacultyRules, getLecturers,
-  createThesis, updateThesis,
+  createThesis, updateThesis, getDefenseRequests, getDefenseSchedules,
 } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
@@ -57,6 +57,8 @@ const AlurSkripsi = () => {
   const [consultations, setConsultations] = useState([]);
   const [rules, setRules] = useState([]);
   const [lecturers, setLecturers] = useState([]);
+  const [defenseRequests, setDefenseRequests] = useState([]);
+  const [defenseSchedules, setDefenseSchedules] = useState([]);
   const [selectedWf, setSelectedWf] = useState(null);
   const [wfDraft, setWfDraft] = useState(null);
   const [activeStage, setActiveStage] = useState(1);
@@ -74,13 +76,24 @@ const AlurSkripsi = () => {
 
   const isAdmin = user?.role === 'admin';
   const isDosen = user?.role === 'dosen';
+  const linkedDefenseRequest = wf ? (defenseRequests || []).filter(r => String(r.thesis_id) === String(wf.thesis_id)).slice(-1)[0] || null : null;
+  const scheduledDefense = linkedDefenseRequest ? (defenseSchedules || []).find(s => Number(s.defense_request_id) === Number(linkedDefenseRequest.id)) : null;
+  const defenseApproved = !!linkedDefenseRequest && linkedDefenseRequest.status === 'disetujui';
+  const requestStatusInfo = {
+    pending: { label: 'Menunggu ACC Pembimbing', cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+    diterima_dosen: { label: 'Diterima Pembimbing — Menunggu Penjadwalan', cls: 'bg-green-100 text-green-800 border-green-200' },
+    ditolak_dosen: { label: 'Ditolak Pembimbing', cls: 'bg-red-100 text-red-800 border-red-200' },
+    menunggu_persetujuan_dosen: { label: 'Diusulkan Panitia — Menunggu Pembimbing', cls: 'bg-amber-100 text-amber-800 border-amber-200' },
+    disetujui: { label: 'Dijadwalkan', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  };
 
   useEffect(() => { load(); }, []);
   const load = async () => {
     setLoading(true);
     try {
-      const [rWf, rTh, rSt, rC, rR, rL] = await Promise.all([
+      const [rWf, rTh, rSt, rC, rR, rL, rReq, rSch] = await Promise.all([
         getWorkflows(), getTheses(), getStudents(), getConsultations(), getFacultyRules(), getLecturers(),
+        getDefenseRequests(), getDefenseSchedules(),
       ]);
       const norm = (r) => r.data?.data || r.data || [];
       const wfs = norm(rWf);
@@ -90,6 +103,8 @@ const AlurSkripsi = () => {
       setConsultations(norm(rC));
       setRules(norm(rR));
       setLecturers(norm(rL));
+      setDefenseRequests(norm(rReq));
+      setDefenseSchedules(norm(rSch));
 
       if (wfs.length) {
         let pick = wfs[0];
@@ -665,10 +680,39 @@ const AlurSkripsi = () => {
                   <span className="text-sm text-slate-800">{label}</span>
                 </label>
               ))}
+              {/* Status pendaftaran ujian defense (terintegrasi Alur Skripsi) */}
+              <div className="mt-3 p-3 rounded-xl border bg-slate-50 text-xs space-y-1.5">
+                <p className="font-bold text-slate-700 uppercase tracking-wide">Pendaftaran Ujian Defense</p>
+                {linkedDefenseRequest ? (
+                  <>
+                    <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold border ${requestStatusInfo[linkedDefenseRequest.status]?.cls || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                      {requestStatusInfo[linkedDefenseRequest.status]?.label || linkedDefenseRequest.status}
+                    </span>
+                    <p className="text-slate-600">Usulan: <span className="font-semibold">{linkedDefenseRequest.tanggal_diusulkan} · {linkedDefenseRequest.waktu_diusulkan}</span></p>
+                    {scheduledDefense && (
+                      <p className="text-slate-600">Jadwal: <span className="font-semibold">{new Date(`${scheduledDefense.tanggal}T${scheduledDefense.waktu || '00:00'}`).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })} · {scheduledDefense.waktu} · {scheduledDefense.ruangan} · Penguji {scheduledDefense.dosen_penguji_1_nama} &amp; {scheduledDefense.dosen_penguji_2_nama}</span></p>
+                    )}
+                    {linkedDefenseRequest.status === 'diterima_dosen' && (
+                      <p className="text-amber-700">Menunggu penjadwalan panitia — buat jadwal di menu <span className="font-semibold">Penjadwalan Sidang</span>.</p>
+                    )}
+                    {linkedDefenseRequest.status === 'menunggu_persetujuan_dosen' && (
+                      <p className="text-amber-700">Menunggu ACC pembimbing atas usulan jadwal panitia — lihat menu <span className="font-semibold">Persetujuan Jadwal</span> (dosen).</p>
+                    )}
+                    {linkedDefenseRequest.status === 'ditolak_dosen' && linkedDefenseRequest.alasan_dosen && (
+                      <p className="text-red-700">Alasan pembimbing: {linkedDefenseRequest.alasan_dosen}</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-amber-700 flex items-center gap-1"><AlertTriangle className="w-4 h-4 shrink-0" /> Mahasiswa belum mendaftar ujian — Kartu Peserta belum bisa terbit.</p>
+                )}
+              </div>
               {isAdmin && (
-                <Button className="mt-4 w-full" disabled={saving || !(wf.bebas_pustaka && wf.bebas_business_office && wf.transkrip_lengkap)} onClick={() => persist({ kartu_peserta_issued: true, stage: 8 })}>
+                <Button className="mt-4 w-full" disabled={saving || !(wf.bebas_pustaka && wf.bebas_business_office && wf.transkrip_lengkap) || !defenseApproved} onClick={() => persist({ kartu_peserta_issued: true, stage: 8 })}>
                   <ShieldCheck className="w-4 h-4 mr-2" /> Terbitkan Kartu Peserta Ujian (Digital)
                 </Button>
+              )}
+              {isAdmin && !defenseApproved && (wf.bebas_pustaka && wf.bebas_business_office && wf.transkrip_lengkap) && (
+                <p className="mt-2 text-[11px] text-amber-700">Tombol aktif setelah pendaftaran ujian disetujui &amp; dijadwalkan (status “Dijadwalkan”).</p>
               )}
               {wf.kartu_peserta_issued && (
                 <div className="mt-4 p-4 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50">
@@ -685,6 +729,9 @@ const AlurSkripsi = () => {
           {activeStage === 8 && (
             <div>
               <StageHeader num={8} title="Sidang Skripsi (Defense)" desc={`Pilih ${rule.jumlah_penguji ?? 2} penguji; setiap penguji memberi nilai per komponen. Nilai akhir dihitung otomatis dengan bobot fakultas.`} />
+              {scheduledDefense && (
+                <p className="mt-2 text-xs text-slate-600">Jadwal sidang (panitia): <span className="font-semibold">{new Date(`${scheduledDefense.tanggal}T${scheduledDefense.waktu || '00:00'}`).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })} · {scheduledDefense.waktu} · {scheduledDefense.ruangan} · Penguji {scheduledDefense.dosen_penguji_1_nama} &amp; {scheduledDefense.dosen_penguji_2_nama}</span></p>
+              )}
               {isAdmin && (
                 <div className="mt-4">
                   <PengujiSelector selected={wf.sidang_penguji || []} onToggle={(id) => setWfDraft({ ...wf, sidang_penguji: togglePenguji(wf.sidang_penguji || [], id) })} max={`tepat ${rule.jumlah_penguji ?? 2}`} />

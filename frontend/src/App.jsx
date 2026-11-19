@@ -6,7 +6,8 @@ import Dashboard from './pages/Dashboard';
 import DataMahasiswa from './pages/DataMahasiswa';
 import DataDosen from './pages/DataDosen';
 import KeahlianDosen from './pages/KeahlianDosen';
-import PengajuanDefense from './pages/PengajuanDefense';
+// DEPRECATED: PengajuanDefense digabung ke dalam Alur Skripsi (Tahap 7 — Pendaftaran Ujian)
+// import PengajuanDefense from './pages/PengajuanDefense';
 import AIRecommendasi from './pages/AIRecommendasi';
 import PersetujuanJadwal from './pages/PersetujuanJadwal';
 import BimbinganSaya from './pages/BimbinganSaya';
@@ -68,7 +69,7 @@ function App() {
           <Route path="/dosen" element={<Page roles={['admin']}><DataDosen /></Page>} />
           <Route path="/keahlian" element={<Page roles={['admin']}><KeahlianDosen /></Page>} />
           <Route path="/skripsi" element={<Navigate to="/alur-skripsi" replace />} />
-          <Route path="/pengajuan-defense" element={<Page roles={['mahasiswa']}><PengajuanDefense /></Page>} />
+          <Route path="/pengajuan-defense" element={<Navigate to="/alur-skripsi" replace />} />
           <Route path="/pengajuan-jadwal" element={<Page roles={['dosen']}><PersetujuanJadwal /></Page>} />
           <Route path="/bimbingan-saya" element={<Page roles={['dosen']}><BimbinganSaya /></Page>} />
           <Route path="/alur-skripsi" element={<Page roles={['admin', 'dosen', 'mahasiswa']}><AlurSkripsiDispatcher /></Page>} />

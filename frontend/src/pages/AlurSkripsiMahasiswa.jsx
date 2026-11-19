@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   getWorkflows, updateWorkflow, getTheses, getStudents, getConsultations, getFacultyRules, getLecturers,
-  createThesis, updateThesis,
+  createThesis, updateThesis, getDefenseRequests, getDefenseSchedules, createDefenseRequest, aiAnalyze,
 } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
-import { GraduationCap, Lock, CheckCircle2, AlertTriangle, FileSignature, ShieldCheck, Loader2 } from 'lucide-react';
+import Select from '../components/common/Select';
+import { GraduationCap, Lock, CheckCircle2, AlertTriangle, FileSignature, ShieldCheck, Loader2, CalendarDays, Sparkles } from 'lucide-react';
 
 const STAGES = [
   { n: 1, label: 'Verifikasi Prasyarat' },
@@ -41,13 +42,24 @@ const AlurSkripsiMahasiswa = () => {
   const [bebakBusinessOffice, setBebakBusinessOffice] = useState(false);
   const [transkrip, setTranskrip] = useState(false);
   const [revisiLink, setRevisiLink] = useState('');
+  const [lecturers, setLecturers] = useState([]);
+  const [myRequests, setMyRequests] = useState([]);
+  const [mySchedules, setMySchedules] = useState([]);
+  const [showDefenseForm, setShowDefenseForm] = useState(false);
+  const [defenseSaving, setDefenseSaving] = useState(false);
+  const [defenseAnalyzing, setDefenseAnalyzing] = useState(false);
+  const [defenseForm, setDefenseForm] = useState({
+    tanggal_diusulkan: '', waktu_diusulkan: '', catatan_mahasiswa: '',
+    dosen_rekomendasi_id: '', topik_ai: '', bidang_ai: '',
+  });
 
   useEffect(() => { load(); }, []);
   const load = async () => {
     setLoading(true);
     try {
-      const [rWfs, rTh, rSt, rC, rR] = await Promise.all([
+      const [rWfs, rTh, rSt, rC, rR, rReq, rSch, rLect] = await Promise.all([
         getWorkflows(), getTheses(), getStudents(), getConsultations(), getFacultyRules(),
+        getDefenseRequests(), getDefenseSchedules(), getLecturers(),
       ]);
       const norm = (r) => r.data?.data || r.data || [];
       const wfs = norm(rWfs);
@@ -55,6 +67,9 @@ const AlurSkripsiMahasiswa = () => {
       const students = norm(rSt);
       const consultations = norm(rC);
       const rules = norm(rR);
+      const allRequests = norm(rReq);
+      const allSchedules = norm(rSch);
+      setLecturers(norm(rLect));
       const me = students.find(s => String(s.user_id) === String(user.id));
       const myThesis = me ? theses.find(t => String(t.student_id) === String(me.id)) : null;
       const mine = myThesis ? wfs.find(w => String(w.thesis_id) === String(myThesis.id)) : null;
@@ -73,6 +88,10 @@ const AlurSkripsiMahasiswa = () => {
         setBebakBusinessOffice(!!mine.bebas_business_office);
         setTranskrip(!!mine.transkrip_lengkap);
         setRevisiLink(mine.revisi_final_link || '');
+        const linked = allRequests.filter(r => String(r.thesis_id) === String(mine.thesis_id));
+        setMyRequests(linked);
+        const linkedIds = linked.map(r => Number(r.id));
+        setMySchedules(allSchedules.filter(s => linkedIds.includes(Number(s.defense_request_id))));
       }
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
@@ -108,6 +127,61 @@ const AlurSkripsiMahasiswa = () => {
     6: turnitin !== '' && Number(turnitin) >= 0,
     7: bebakPustaka && bebakBusinessOffice && transkrip,
     9: revisiLink.trim().length > 4,
+  };
+
+  // Pendaftaran Ujian Defense (terintegrasi — bagian dari Tahap 7, bukan halaman terpisah)
+  const activeRequest = myRequests.find(r => ['pending', 'diterima_dosen', 'menunggu_persetujuan_dosen', 'disetujui'].includes(r.status))
+    || myRequests[myRequests.length - 1]
+    || null;
+  const scheduledDefense = activeRequest
+    ? mySchedules.find(s => Number(s.defense_request_id) === Number(activeRequest.id))
+    : null;
+  const canRegisterExam = !!wf.acc_sidang; // setelah dosen ACC Sidang Akhir (Tahap 6)
+  const requestStatusInfo = {
+    pending: { label: 'Menunggu ACC Pembimbing', cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+    diterima_dosen: { label: 'Diterima Pembimbing — Menunggu Penjadwalan', cls: 'bg-green-100 text-green-800 border-green-200' },
+    ditolak_dosen: { label: 'Ditolak Pembimbing', cls: 'bg-red-100 text-red-800 border-red-200' },
+    menunggu_persetujuan_dosen: { label: 'Diusulkan Panitia — Menunggu Pembimbing', cls: 'bg-amber-100 text-amber-800 border-amber-200' },
+    disetujui: { label: 'Dijadwalkan', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  };
+
+  const handleAnalyzeWithAI = async () => {
+    setDefenseAnalyzing(true);
+    try {
+      const judulFinal = wf.judul_final || 'Skripsi';
+      const res = await aiAnalyze({ judul: judulFinal, abstrak: abstrak || judulFinal });
+      const result = res.data?.data || res.data;
+      setDefenseForm(f => ({ ...f, topik_ai: result?.topik || '', bidang_ai: result?.bidang || '' }));
+    } catch (e) {
+      setMessage({ type: 'error', text: 'Gagal analisis AI.' });
+    } finally { setDefenseAnalyzing(false); }
+  };
+
+  const handleSubmitDefense = async () => {
+    if (!defenseForm.tanggal_diusulkan || !defenseForm.waktu_diusulkan) {
+      setMessage({ type: 'error', text: 'Tanggal & waktu usulan wajib diisi.' });
+      return;
+    }
+    setDefenseSaving(true);
+    setMessage(null);
+    try {
+      await createDefenseRequest({
+        thesis_id: Number(wf.thesis_id),
+        topik_ai: defenseForm.topik_ai || null,
+        bidang_ai: defenseForm.bidang_ai || null,
+        dosen_rekomendasi_id: defenseForm.dosen_rekomendasi_id ? Number(defenseForm.dosen_rekomendasi_id) : null,
+        tanggal_diusulkan: defenseForm.tanggal_diusulkan,
+        waktu_diusulkan: defenseForm.waktu_diusulkan,
+        catatan_mahasiswa: defenseForm.catatan_mahasiswa || null,
+        created_at: new Date().toISOString(),
+      });
+      setMessage({ type: 'success', text: 'Pendaftaran ujian terkirim. Menunggu ACC pembimbing — setelah ACC, panitia menjadwalkan sidang Anda.' });
+      setShowDefenseForm(false);
+      setDefenseForm({ tanggal_diusulkan: '', waktu_diusulkan: '', catatan_mahasiswa: '', dosen_rekomendasi_id: '', topik_ai: '', bidang_ai: '' });
+      load();
+    } catch (e) {
+      setMessage({ type: 'error', text: 'Gagal mendaftar: ' + (e.response?.data?.message || e.message) });
+    } finally { setDefenseSaving(false); }
   };
 
   const handleSubmitJudul = async () => {
@@ -362,13 +436,78 @@ const AlurSkripsiMahasiswa = () => {
             </label>
           ))}
           <Button onClick={handleSaveYudisium} disabled={saving} variant="primary">Simpan Checklist Yudisium</Button>
+
+          {/* Pendaftaran Ujian (Jadwal Sidang Defense) — terintegrasi dalam Alur Skripsi */}
+          <div className="pt-4 mt-2 border-t border-slate-200">
+            <h4 className="font-bold text-slate-900 mb-1 flex items-center gap-2"><CalendarDays className="w-5 h-5 text-blue-600" /> Pendaftaran Ujian (Jadwal Sidang)</h4>
+            <p className="text-xs text-slate-500 mb-3">Wajib daftar setelah ACC Sidang Akhir pembimbing. Pembimbing ACC → panitia menjadwalkan (dosen &amp; ruangan cek bentrok) → Kartu Peserta terbit.</p>
+            {!canRegisterExam && (
+              <p className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center gap-2"><AlertTriangle className="w-4 h-4 shrink-0" /> ACC Sidang Akhir dosen belum diberikan — pendaftaran baru terbuka di Tahap 6 akhir / Tahap 7.</p>
+            )}
+            {canRegisterExam && activeRequest && (
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold border ${requestStatusInfo[activeRequest.status]?.cls || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                    {requestStatusInfo[activeRequest.status]?.label || activeRequest.status}
+                  </span>
+                  {scheduledDefense && (
+                    <span className="inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                      {new Date(`${scheduledDefense.tanggal}T${scheduledDefense.waktu || '00:00'}`).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })} · {scheduledDefense.waktu} · {scheduledDefense.ruangan}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-600">Usulan Anda: <span className="font-semibold">{activeRequest.tanggal_diusulkan} {activeRequest.waktu_diusulkan}</span></p>
+                {scheduledDefense && (
+                  <p className="text-xs text-slate-600">Penguji: <span className="font-semibold">{[scheduledDefense.dosen_penguji_1_nama, scheduledDefense.dosen_penguji_2_nama].filter(Boolean).join(' & ')}</span></p>
+                )}
+                {activeRequest.catatan_mahasiswa && <p className="text-xs text-slate-500">Catatan Anda: “{activeRequest.catatan_mahasiswa}”</p>}
+                {activeRequest.status === 'ditolak_dosen' && activeRequest.alasan_dosen && (
+                  <p className="text-xs text-red-700">Alasan pembimbing: {activeRequest.alasan_dosen}</p>
+                )}
+                {activeRequest.status === 'ditolak_dosen' && (
+                  <Button variant="secondary" className="mt-2" onClick={() => setShowDefenseForm(true)}>Ajukan Ulang dengan Jadwal Baru</Button>
+                )}
+              </div>
+            )}
+            {canRegisterExam && !activeRequest && !showDefenseForm && (
+              <Button variant="primary" onClick={() => setShowDefenseForm(true)}><FileSignature className="w-4 h-4 mr-2" /> Ajukan Pendaftaran Ujian</Button>
+            )}
+            {canRegisterExam && showDefenseForm && (
+              <div className="p-4 rounded-xl border-2 border-blue-100 bg-blue-50/40 space-y-3">
+                <p className="text-[11px] uppercase tracking-wider text-blue-700 font-bold">Form Pendaftaran Ujian</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Input label="Usulan Tanggal" type="date" value={defenseForm.tanggal_diusulkan} onChange={(e) => setDefenseForm({ ...defenseForm, tanggal_diusulkan: e.target.value })} />
+                  <Input label="Usulan Waktu" type="time" value={defenseForm.waktu_diusulkan} onChange={(e) => setDefenseForm({ ...defenseForm, waktu_diusulkan: e.target.value })} />
+                </div>
+                <button type="button" onClick={handleAnalyzeWithAI} disabled={defenseAnalyzing} className="flex items-center gap-2 text-xs font-semibold text-purple-700 hover:text-purple-900 disabled:opacity-50">
+                  <Sparkles className="w-4 h-4" /> {defenseAnalyzing ? 'Menganalisis...' : 'Isi Topik & Bidang dengan AI (opsional)'}
+                </button>
+                <Input label="Topik AI" value={defenseForm.topik_ai} onChange={(e) => setDefenseForm({ ...defenseForm, topik_ai: e.target.value })} placeholder="Opsional" />
+                <Input label="Bidang AI" value={defenseForm.bidang_ai} onChange={(e) => setDefenseForm({ ...defenseForm, bidang_ai: e.target.value })} placeholder="Opsional" />
+                <Select label="Dosen Rekomendasi (opsional, tidak mengikat)" value={defenseForm.dosen_rekomendasi_id} onChange={(e) => setDefenseForm({ ...defenseForm, dosen_rekomendasi_id: e.target.value })} options={[{ value: '', label: '— Pilih dosen —' }, ...lecturers.map(l => ({ value: l.id, label: l.nama }))]} className="mb-0" />
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Catatan untuk Panitia / Pembimbing (opsional)</label>
+                  <textarea rows={2} value={defenseForm.catatan_mahasiswa} onChange={(e) => setDefenseForm({ ...defenseForm, catatan_mahasiswa: e.target.value })} placeholder="Preferensi jadwal, alasan, dsb." className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 outline-none text-sm" />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="secondary" onClick={() => setShowDefenseForm(false)}>Batal</Button>
+                  <Button onClick={handleSubmitDefense} disabled={defenseSaving || !defenseForm.tanggal_diusulkan || !defenseForm.waktu_diusulkan}><FileSignature className="w-4 h-4 mr-2" /> Kirim Pendaftaran</Button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {stage === 8 && (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-6">
           <h3 className="font-bold font-display text-slate-900 mb-1">Tahap 8 — Sidang Skripsi (Defense)</h3>
-          <p className="text-sm text-slate-600">Nilai sidang diisi oleh Dewan Penguji. Anda tidak perlu bertindak, cukup hadir saat sidang.</p>
+          {scheduledDefense ? (
+            <p className="text-sm text-slate-700">Jadwal sidang Anda: <span className="font-semibold">{new Date(`${scheduledDefense.tanggal}T${scheduledDefense.waktu || '00:00'}`).toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })} · {scheduledDefense.waktu} · {scheduledDefense.ruangan}</span></p>
+          ) : (
+            <p className="text-sm text-slate-600">Jadwal sidang belum tercatat — panitia belum menjadwalkan sidang Anda.</p>
+          )}
+          <p className="text-xs text-slate-500 mt-1">Nilai sidang diisi oleh Dewan Penguji. Anda tidak perlu bertindak, cukup hadir saat sidang.</p>
           {wf.nilai_akhir != null && (
             <div className="mt-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200">
               <p className="text-xs uppercase tracking-wider text-emerald-700 font-bold">Nilai Akhir Sidang</p>
