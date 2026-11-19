@@ -282,12 +282,14 @@ const AlurSkripsi = () => {
       setMessage({ type: 'error', text: `Pilih tepat ${rule.jumlah_penguji ?? 2} penguji sidang.` });
       return;
     }
+    const isPass = nilaiHuruf !== 'E';
     persist({
       sidang_penguji: wf.sidang_penguji,
       nilai_detail: wf.nilai_detail,
       nilai_akhir: nilaiAkhir,
       nilai_huruf: nilaiHuruf,
-      status: nilaiHuruf !== 'E' ? 'berjalan' : 'mengulang_sidang',
+      status: isPass ? 'berjalan' : 'mengulang_sidang',
+      ...(isPass ? { stage: 9 } : {}),
     });
   };
 
