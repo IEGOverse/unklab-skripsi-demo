@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { getUsers, getStudents, getLecturers, getTheses, getDefenseRequests, getDefenseSchedules } from '../api/api';
 import { Users, User, BookOpen, Calendar, FileText, Info, ArrowRight } from 'lucide-react';
 
+const norm = (r) => r.data?.data || r.data || [];
+
 const statCards = {
   admin: [
     { label: 'Pengguna', icon: Users, key: 'users', from: 'from-blue-500', to: 'to-cyan-400' },
@@ -24,6 +26,7 @@ const statCards = {
 const Dashboard = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState({});
+  const [people, setPeople] = useState({ students: [], lecturers: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,6 +38,14 @@ const Dashboard = () => {
         const obj = {};
         roles.forEach((key, i) => { obj[key] = results[i]; });
         setStats(obj);
+
+        // Ambil daftar students & lecturers untuk menampilkan nama asli
+        // di sambutan (username teknis tidak tampil di UI)
+        const [rSt, rLec] = await Promise.all([
+          getStudents().catch(() => null),
+          getLecturers().catch(() => null),
+        ]);
+        setPeople({ students: norm(rSt), lecturers: norm(rLec) });
       } catch (e) {
         console.error(e);
       } finally {
@@ -61,6 +72,12 @@ const Dashboard = () => {
 
   const items = statCards[user.role] || statCards.mahasiswa;
 
+  const displayName = user?.role === 'mahasiswa'
+    ? (people.students.find(s => String(s.user_id) === String(user.id))?.nama || user?.username)
+    : user?.role === 'dosen'
+      ? (people.lecturers.find(l => String(l.user_id) === String(user.id))?.nama || user?.username)
+      : 'Administrator';
+
   return (
     <div className="space-y-6">
       {/* Header sambutan */}
@@ -75,7 +92,7 @@ const Dashboard = () => {
         <div className="relative">
           <p className="text-[11px] uppercase tracking-widest text-cyan-300 font-semibold">Dashboard {user.role}</p>
           <h1 className="mt-1.5 text-2xl sm:text-3xl font-extrabold font-display tracking-tight">
-            Selamat datang, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300">{user.username}</span>
+            Selamat datang, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300">{displayName}</span>
           </h1>
           <p className="mt-2 text-sm text-blue-100/80 max-w-lg">Kelola seluruh proses skripsi dari satu tempat — bimbingan, AI, dan sidang defense.</p>
         </div>
