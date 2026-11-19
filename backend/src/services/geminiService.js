@@ -27,6 +27,11 @@ async function analyzeTopic(judul, abstrak) {
     const genAI = new GoogleGenerativeAI(API_KEY);
     const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
     const model = genAI.getGenerativeModel({ model: modelName });
+    // Timeout 15 detik agar request tidak menggantung — fallback analisis dipakai
+    const withTimeout = (p) => Promise.race([
+      p,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini timeout (15s)')), 15000)),
+    ]);
 
     const prompt = `
 Analisis skripsi berikut dan berikan hasil dalam format JSON yang valid (tanpa markdown code block):
@@ -45,7 +50,7 @@ Berikan output JSON dengan struktur:
 Pastikan output adalah JSON murni tanpa teks tambahan.
 `;
 
-    const result = await model.generateContent(prompt);
+    const result = await withTimeout(model.generateContent(prompt));
     const response = await result.response;
     const text = response.text();
 
