@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   getWorkflows, updateWorkflow, getTheses, getStudents, getConsultations, getFacultyRules, getLecturers,
+  createThesis, updateThesis,
 } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
@@ -64,6 +65,7 @@ const AlurSkripsi = () => {
   const [edgeReason, setEdgeReason] = useState('');
   const [semesterBaru, setSemesterBaru] = useState('');
   const [judulBaru, setJudulBaru] = useState(['', '', '']);
+  const [abstrak, setAbstrak] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
 
@@ -98,6 +100,8 @@ const AlurSkripsi = () => {
         setWfDraft(JSON.parse(JSON.stringify(pick)));
         setActiveStage(pick.stage || 1);
         setJudulBaru(pick.judul_pilihan?.length ? [...pick.judul_pilihan] : ['', '', '']);
+        const pickThesis = pick?.thesis_id ? norm(rTh).find(t => t.id === pick.thesis_id) : null;
+        setAbstrak(pickThesis?.abstrak || '');
       }
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
@@ -186,6 +190,66 @@ const AlurSkripsi = () => {
     } finally { setSaving(false); }
   };
 
+  const handleAjukanJudul = async () => {
+    const me = user.role === 'mahasiswa' ? students.find(s => String(s.user_id) === String(user.id)) : null;
+    const validProposals = judulBaru.filter(j => j.trim());
+    if (validProposals.length === 0) {
+      setMessage({ type: 'error', text: 'Minimal 1 judul diisi.' });
+      return;
+    }
+    setSaving(true);
+    setMessage(null);
+    try {
+      let thesis = wf.thesis_id ? theses.find(t => t.id === wf.thesis_id) : null;
+      const thesisPayload = {
+        student_id: me ? me.id : (thesis?.student_id) || (student?.id) || null,
+        judul: validProposals[0],
+        abstrak,
+        status: 'diajukan',
+      };
+      if (thesis) {
+        const res = await updateThesis(thesis.id, { ...thesis, ...thesisPayload });
+        thesis = res.data?.data || res.data || { ...thesis, ...thesisPayload };
+      } else {
+        const res = await createThesis({ ...thesisPayload, created_at: new Date().toISOString() });
+        thesis = res.data?.data || res.data || null;
+      }
+      await persist({ judul_pilihan: validProposals, thesis_id: thesis?.id ?? wf.thesis_id });
+    } catch (e) {
+      setMessage({ type: 'error', text: 'Gagal mengajukan: ' + (e.response?.data?.message || e.message) });
+    } finally { setSaving(false); }
+  };
+
+  const handleTerbitkanSK = async () => {
+    if (!wf.judul_final || !wf.pembimbing_1_id || !wf.pembimbing_2_id || wf.pembimbing_1_id === wf.pembimbing_2_id) {
+      setMessage({ type: 'error', text: 'Pilih judul final dan 2 pembimbing berbeda.' });
+      return;
+    }
+    setSaving(true);
+    setMessage(null);
+    try {
+      let thesis = wf.thesis_id ? theses.find(t => t.id === wf.thesis_id) : null;
+      const payload = { judul: wf.judul_final, abstrak, status: 'disetujui' };
+      if (thesis) {
+        await updateThesis(thesis.id, { ...thesis, ...payload });
+      } else {
+        const res = await createThesis({ student_id: (student?.id) ?? null, ...payload, created_at: new Date().toISOString() });
+        const created = res.data?.data || res.data;
+        thesis = created;
+      }
+      await persist({
+        judul_final: wf.judul_final,
+        pembimbing_1_id: Number(wf.pembimbing_1_id),
+        pembimbing_2_id: Number(wf.pembimbing_2_id),
+        sk_tanggal: new Date().toLocaleDateString('id-ID'),
+        stage: 3,
+        thesis_id: thesis?.id ?? wf.thesis_id,
+      });
+    } catch (e) {
+      setMessage({ type: 'error', text: 'Gagal menerbitkan SK: ' + (e.response?.data?.message || e.message) });
+    } finally { setSaving(false); }
+  };
+
   const toggleChecklistDoc = (label) => {
     const cur = wf.checklist_checked || [];
     const next = cur.includes(label) ? cur.filter(x => x !== label) : [...cur, label];
@@ -239,6 +303,8 @@ const AlurSkripsi = () => {
       setActiveStage(target.stage || 1);
       setMessage(null);
       setJudulBaru(target.judul_pilihan?.length ? [...target.judul_pilihan] : ['', '', '']);
+      const targetThesis = target.thesis_id ? theses.find(t => t.id === target.thesis_id) : null;
+      setAbstrak(targetThesis?.abstrak || '');
     }
   };
 
@@ -373,13 +439,23 @@ const AlurSkripsi = () => {
 
           {activeStage === 2 && (
             <div>
-              <StageHeader num={2} title="Pengajuan & Seleksi Judul" desc="Mahasiswa mengusulkan hingga 3 pilihan judul. Kaprodi menetapkan judul & pembimbing (SK Penetapan)." />
+              <StageHeader num={2} title="Pengajuan & Seleksi Judul" desc="Mahasiswa mengusulkan judul + abstrak. Kaprodi/Admin menetapkan judul final & pembimbing (SK Penetapan)." />
               {user.role === 'mahasiswa' && !wf.judul_final && (
                 <div className="mt-4 space-y-4">
                   {judulBaru.map((j, i) => (
                     <Input key={i} label={`Usulan Judul ${i + 1}${i === 2 ? ' (opsional)' : ''}`} value={j} onChange={(e) => { const next = [...judulBaru]; next[i] = e.target.value; setJudulBaru(next); }} placeholder="Tulis usulan judul..." />
                   ))}
-                  <Button onClick={() => persist({ judul_pilihan: judulBaru.filter(j => j.trim()) })} disabled={saving || !judulBaru[0].trim()} className="w-full"><FileSignature className="w-4 h-4 mr-2" /> Ajukan Usulan Judul</Button>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Abstrak</label>
+                    <textarea
+                      rows={3}
+                      value={abstrak}
+                      onChange={(e) => setAbstrak(e.target.value)}
+                      placeholder="Ringkasan singkat skripsi Anda (min. 1-2 kalimat)..."
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 outline-none text-sm"
+                    />
+                  </div>
+                  <Button onClick={handleAjukanJudul} disabled={saving || !judulBaru[0].trim()} className="w-full"><FileSignature className="w-4 h-4 mr-2" /> Ajukan Usulan Judul</Button>
                 </div>
               )}
               {(wf.judul_pilihan?.length > 0 || wf.judul_final) && (
@@ -390,6 +466,12 @@ const AlurSkripsi = () => {
                       <li key={i} className="p-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800">{i + 1}. {j}</li>
                     ))}
                   </ul>
+                  {(wf.abstrak || abstrak) && (
+                    <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700">
+                      <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Abstrak</p>
+                      <p className="whitespace-pre-wrap">{wf.abstrak || abstrak}</p>
+                    </div>
+                  )}
                   {wf.judul_final && (
                     <div className="mt-4 p-4 rounded-xl border border-green-200 bg-green-50">
                       <p className="text-[11px] uppercase tracking-wider text-green-700 font-semibold">Judul Terpilih (SK)</p>
@@ -408,7 +490,7 @@ const AlurSkripsi = () => {
                         <Select label="Pembimbing I" value={wf.pembimbing_1_id || ''} onChange={(e) => setWfDraft({ ...wf, pembimbing_1_id: Number(e.target.value) })} options={lecturers.map(l => ({ value: l.id, label: l.nama }))} />
                         <Select label="Pembimbing II" value={wf.pembimbing_2_id || ''} onChange={(e) => setWfDraft({ ...wf, pembimbing_2_id: Number(e.target.value) })} options={lecturers.map(l => ({ value: l.id, label: l.nama }))} />
                       </div>
-                      <Button onClick={() => { if (!wf.judul_final || !wf.pembimbing_1_id || !wf.pembimbing_2_id || wf.pembimbing_1_id === wf.pembimbing_2_id) { setMessage({ type: 'error', text: 'Pilih judul final dan 2 pembimbing berbeda.' }); return; } persist({ judul_final: wf.judul_final, pembimbing_1_id: wf.pembimbing_1_id, pembimbing_2_id: wf.pembimbing_2_id, sk_tanggal: new Date().toLocaleDateString('id-ID'), stage: 3 }); }} className="w-full"><FileSignature className="w-4 h-4 mr-2" /> Terbitkan SK Judul & Pembimbing</Button>
+                      <Button onClick={handleTerbitkanSK} className="w-full"><FileSignature className="w-4 h-4 mr-2" /> Terbitkan SK Judul & Pembimbing</Button>
                     </div>
                   )}
                 </div>

@@ -46,8 +46,9 @@ const guardWrite = (req, res, next) => {
         const thesis = (db.theses || []).find(t => Number(t.id) === id);
         if (!thesis) return res.status(404).json({ success: false, message: 'Skripsi tidak ditemukan.' });
         const isOwn = me && Number(thesis.student_id) === Number(me.id);
-        const stillDiajukan = thesis.status === 'diajukan';
-        const notChangingStatus = !req.body.status || req.body.status === thesis.status;
+        const stillDiajukan = thesis.status === 'diajukan' || thesis.status === 'draft';
+        const notChangingStatus = !req.body.status || req.body.status === thesis.status
+          || (req.body.status === 'diajukan' && (thesis.status === 'draft' || thesis.status === 'diajukan'));
         const notChangingOwner = !req.body.student_id || Number(req.body.student_id) === Number(thesis.student_id);
         if (isOwn && stillDiajukan && notChangingStatus && notChangingOwner) return next();
         return res.status(403).json({ success: false, message: 'Skripsi hanya dapat diedit oleh mahasiswa selagi berstatus diajukan; setelah itu hanya dosen/admin yang dapat mengubah.' });

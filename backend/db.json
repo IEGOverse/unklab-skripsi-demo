@@ -120,7 +120,7 @@
       "student_id": 2,
       "judul": "Analisis Sentimen Media Sosial Menggunakan Metode Naive Bayes",
       "abstrak": "Studi ini menganalisis sentimen masyarakat terhadap policy publik melalui media sosial menggunakan algoritma Naive Bayes untuk klasifikasi sentimen positif, negatif, dan netral.",
-      "status": "draft",
+      "status": "diajukan",
       "created_at": "2026-01-20T00:00:00Z"
     }
   ],
@@ -156,7 +156,7 @@
       "topik_ai": "Sistem Informasi Manajemen Skripsi",
       "bidang_ai": "Sistem Informasi",
       "dosen_rekomendasi_id": 1,
-      "status": "pending",
+      "status": "diterima_dosen",
       "alasan_admin": null,
       "created_at": "2026-03-01T00:00:00Z",
       "tanggal_diusulkan": "2026-03-22",
@@ -175,7 +175,7 @@
       "topik_ai": "Analisis dan pengembangan sistem informasi",
       "bidang_ai": "Sistem Informasi",
       "dosen_rekomendasi_id": 1,
-      "status": "pending",
+      "status": "diterima_dosen",
       "alasan_admin": null,
       "created_at": "2026-11-09T06:28:23.655Z",
       "id": 2,
@@ -623,7 +623,7 @@
       "body": "Budi Santoso mengajukan sidang defense untuk \"Sistem Informasi Manajemen Skripsi Berbasis Web\". Usulan: 2026-03-22 09:00.",
       "type": "defense_request",
       "request_id": 1,
-      "read": false,
+      "read": true,
       "created_at": "2026-11-19T01:04:11.717Z"
     },
     {
@@ -634,7 +634,7 @@
       "body": "Budi Santoso mengajukan sidang defense kedua untuk skripsi yang sama. Usulan: 2026-03-25 13:00.",
       "type": "defense_request",
       "request_id": 2,
-      "read": false,
+      "read": true,
       "created_at": "2026-11-19T01:04:11.718Z"
     }
   ]

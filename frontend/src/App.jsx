@@ -6,7 +6,6 @@ import Dashboard from './pages/Dashboard';
 import DataMahasiswa from './pages/DataMahasiswa';
 import DataDosen from './pages/DataDosen';
 import KeahlianDosen from './pages/KeahlianDosen';
-import DataSkripsi from './pages/DataSkripsi';
 import PengajuanDefense from './pages/PengajuanDefense';
 import AIRecommendasi from './pages/AIRecommendasi';
 import PersetujuanJadwal from './pages/PersetujuanJadwal';
@@ -58,7 +57,7 @@ function App() {
           <Route path="/mahasiswa" element={<Page roles={['admin']}><DataMahasiswa /></Page>} />
           <Route path="/dosen" element={<Page roles={['admin']}><DataDosen /></Page>} />
           <Route path="/keahlian" element={<Page roles={['admin']}><KeahlianDosen /></Page>} />
-          <Route path="/skripsi" element={<Page roles={['admin', 'mahasiswa']}><DataSkripsi /></Page>} />
+          <Route path="/skripsi" element={<Navigate to="/alur-skripsi" replace />} />
           <Route path="/pengajuan-defense" element={<Page roles={['mahasiswa']}><PengajuanDefense /></Page>} />
           <Route path="/pengajuan-jadwal" element={<Page roles={['dosen']}><PersetujuanJadwal /></Page>} />
           <Route path="/alur-skripsi" element={<Page roles={['admin', 'mahasiswa']}><AlurSkripsi /></Page>} />

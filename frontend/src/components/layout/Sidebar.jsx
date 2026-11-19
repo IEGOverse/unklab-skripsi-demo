@@ -11,7 +11,6 @@ const menuItems = {
     { label: 'Data Mahasiswa', icon: Users, path: '/mahasiswa' },
     { label: 'Data Dosen', icon: Users, path: '/dosen' },
     { label: 'Keahlian Dosen', icon: BookOpen, path: '/keahlian' },
-    { label: 'Data Skripsi', icon: BookOpen, path: '/skripsi' },
     { label: 'Konsultasi', icon: FileText, path: '/konsultasi' },
     { label: 'Jadwal Defense', icon: Calendar, path: '/jadwal-defense' },
     { label: 'Pengaturan Fakultas', icon: Shield, path: '/pengaturan-fakultas' },
@@ -26,7 +25,6 @@ const menuItems = {
   mahasiswa: [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
     { label: 'Alur Skripsi', icon: GraduationCap, path: '/alur-skripsi' },
-    { label: 'Skripsi Saya', icon: BookOpen, path: '/skripsi' },
     { label: 'Pengajuan Defense', icon: FileText, path: '/pengajuan-defense' },
     { label: 'AI Rekomendasi', icon: Shield, path: '/ai-rekomendasi' },
     { label: 'Konsultasi Saya', icon: FileText, path: '/konsultasi' },
