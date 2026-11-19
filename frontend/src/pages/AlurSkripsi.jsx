@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   getWorkflows, updateWorkflow, getTheses, getStudents, getConsultations, getFacultyRules, getLecturers,
-  createThesis, updateThesis, getDefenseRequests, getDefenseSchedules,
+  createThesis, updateThesis, getDefenseRequests, getDefenseSchedules, createNotification,
 } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
@@ -10,7 +10,7 @@ import Select from '../components/common/Select';
 import Modal from '../components/common/Modal';
 import {
   CheckCircle2, Lock, ChevronRight, AlertTriangle, GraduationCap,
-  FileSignature, FlaskConical, BookOpenCheck, ShieldCheck, ScanLine, Sparkles, Printer,
+  FileSignature, FlaskConical, BookOpenCheck, ShieldCheck, ScanLine, Sparkles, Printer, CalendarDays,
 } from 'lucide-react';
 
 const STAGES = [
@@ -287,9 +287,73 @@ const AlurSkripsi = () => {
 
   const togglePenguji = (list, id) => (list.includes(id) ? list.filter(x => x !== id) : [...list, id]);
 
-  const saveSempro = () => {
+  const fmtDateID = (iso) => {
+    if (!iso) return '-';
+    const d = new Date(String(iso).includes('T') ? iso : iso + 'T00:00:00');
+    return d.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  };
+
+  const handleScheduleSempro = async () => {
+    const ruangan = (wf.sempro_ruangan || '').trim();
+    const ok = await persist({ sempro_tanggal: wf.sempro_tanggal, sempro_waktu: wf.sempro_waktu || '', sempro_ruangan: ruangan, sempro_penguji: wf.sempro_penguji, sempro_scheduled: true });
+    if (!ok) return;
+    try {
+      const names = (wf.sempro_penguji || []).map(lecturerName).join(' & ');
+      await createNotification({
+        recipient_role: 'mahasiswa',
+        sender: 'Panitia (Admin)',
+        title: 'Jadwal Seminar Proposal Anda',
+        body: `${student?.nama || 'Mahasiswa'}, seminar proposal Anda dijadwalkan pada ${fmtDateID(wf.sempro_tanggal)} pukul ${wf.sempro_waktu} di ${ruangan}. Penguji: ${names}.`,
+        type: 'sempro_schedule',
+        request_id: null,
+        read: false,
+        created_at: new Date().toISOString(),
+      });
+      setMessage({ type: 'success', text: 'Jadwal diterbitkan & notifikasi terkirim ke mahasiswa.' });
+      load();
+    } catch (e) {
+      setMessage({ type: 'error', text: 'Jadwal tersimpan, tapi notifikasi gagal dikirim.' });
+    }
+  };
+
+  const handleRescheduleSempro = async () => {
+    const ok = await persist({
+      status: 'berjalan', sempro_scheduled: false, sempro_tanggal: null, sempro_waktu: null, sempro_ruangan: null,
+      sempro_penguji: [], sempro_detail: {}, sempro_nilai: null, sempro_catatan: '', revisi_sempro_verified: false, stage: 4,
+    });
+    if (!ok) return;
+    try {
+      await createNotification({
+        recipient_role: 'mahasiswa',
+        sender: 'Panitia (Admin)',
+        title: 'Seminar Proposal Dijadwalkan Ulang',
+        body: `${student?.nama || 'Mahasiswa'}, seminar proposal Anda belum lulus. Panitia akan mengusulkan jadwal baru — mohon menunggu notifikasi berikutnya.`,
+        type: 'sempro_reschedule',
+        request_id: null,
+        read: false,
+        created_at: new Date().toISOString(),
+      });
+      setMessage({ type: 'success', text: 'Sempro dijadwalkan ulang — mahasiswa menerima notifikasi.' });
+    } catch (e) { console.error(e); }
+  };
+
+  const saveSempro = async () => {
     if (semproNilai == null) { setMessage({ type: 'error', text: 'Minimal satu nilai penguji diisi.' }); return; }
-    persist({ sempro_tanggal: wf.sempro_tanggal, sempro_penguji: wf.sempro_penguji, sempro_detail: wf.sempro_detail, sempro_nilai: semproNilai, revisi_sempro_verified: wf.revisi_sempro_verified, stage: 5 });
+    const ok = await persist({ sempro_tanggal: wf.sempro_tanggal, sempro_waktu: wf.sempro_waktu, sempro_ruangan: wf.sempro_ruangan, sempro_penguji: wf.sempro_penguji, sempro_detail: wf.sempro_detail, sempro_nilai: semproNilai, revisi_sempro_verified: wf.revisi_sempro_verified, stage: 5 });
+    if (!ok) return;
+    try {
+      const lulus = semproNilai >= 60;
+      await createNotification({
+        recipient_role: 'mahasiswa',
+        sender: 'Panitia (Admin)',
+        title: lulus ? 'Seminar Proposal — LULUS' : 'Seminar Proposal — BELUM LULUS',
+        body: `${student?.nama || 'Mahasiswa'}, nilai Sempro Anda ${semproNilai}. ${lulus ? 'Selamat — lanjut ke tahap penelitian.' : 'Panitia akan mengusulkan jadwal ulang seminar proposal.'}`,
+        type: 'sempro_result',
+        request_id: null,
+        read: false,
+        created_at: new Date().toISOString(),
+      });
+    } catch (e) { console.error(e); }
   };
 
   const saveSidang = () => {
@@ -562,52 +626,84 @@ const AlurSkripsi = () => {
 
           {activeStage === 4 && (
             <div>
-              <StageHeader num={4} title="Seminar Proposal (Sempro)" desc="Penunjukan penguji, input nilai per penguji, verifikasi revisi, terbit Berita Acara." />
-              <div className="mt-4">
-                <Input label="Tanggal Sempro" type="date" value={wf.sempro_tanggal || ''} onChange={(e) => setWfDraft({ ...wf, sempro_tanggal: e.target.value })} disabled={!isAdmin} />
-              </div>
-              <div className="mt-4">
-                <PengujiSelector selected={wf.sempro_penguji || []} onToggle={(id) => setWfDraft({ ...wf, sempro_penguji: togglePenguji(wf.sempro_penguji || [], id) })} max="minimal 1" />
-              </div>
-              {wf.sempro_penguji?.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Nilai per Penguji (0–100)</p>
-                  <div className="space-y-2">
-                    {wf.sempro_penguji.map((pid) => {
-                      const editable = isAdmin || (isDosen && meAsLecturer?.id === pid);
-                      return (
-                        <div key={pid} className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200">
-                          <span className="flex-1 text-sm text-slate-800">{lecturerName(pid)}</span>
-                          <input type="number" min={0} max={100} className={nilaiInputClass} disabled={!editable} value={wf.sempro_detail?.[pid] ?? ''} onChange={(e) => setWfDraft({ ...wf, sempro_detail: { ...wf.sempro_detail, [pid]: e.target.value === '' ? undefined : Number(e.target.value) } })} placeholder="0-100" />
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {semproNilai != null && (
-                    <div className="mt-3 p-3 rounded-xl bg-slate-900 text-cyan-300 flex items-center justify-between">
-                      <span className="text-xs uppercase tracking-widest text-slate-400">Nilai Sempro (rata-rata)</span>
-                      <span className="text-2xl font-extrabold font-display">{semproNilai}</span>
-                    </div>
-                  )}
+              <StageHeader num={4} title="Seminar Proposal (Sempro)" desc="Alur: (1) Panitia mengatur jadwal — mahasiswa menerima notifikasi. (2) Setelah terlaksana, nilai diinput & diverifikasi ini → Berita Acara. Tidak lulus? Dijadwalkan ulang." />
+
+              {/* LANGKAH 1 — ATUR JADWAL TERLEBIH DAHULU */}
+              <div className="mt-4 p-4 rounded-xl border border-slate-200 bg-slate-50">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Langkah 1 — Atur Jadwal Sempro</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Input label="Tanggal Sempro" type="date" value={wf.sempro_tanggal || ''} onChange={(e) => setWfDraft({ ...wf, sempro_tanggal: e.target.value })} disabled={!isAdmin} />
+                  <Input label="Waktu" type="time" value={wf.sempro_waktu || ''} onChange={(e) => setWfDraft({ ...wf, sempro_waktu: e.target.value })} disabled={!isAdmin} />
                 </div>
-              )}
-              <div className="mt-4">
-                <Input label="Catatan Sempro / Revisi" value={wf.sempro_catatan || ''} onChange={(e) => setWfDraft({ ...wf, sempro_catatan: e.target.value })} disabled={!isAdmin} />
+                <div className="mt-3">
+                  <Input label="Ruangan" value={wf.sempro_ruangan || ''} onChange={(e) => setWfDraft({ ...wf, sempro_ruangan: e.target.value })} placeholder="Mis. R101" disabled={!isAdmin} />
+                </div>
+                <div className="mt-3">
+                  <PengujiSelector selected={wf.sempro_penguji || []} onToggle={(id) => setWfDraft({ ...wf, sempro_penguji: togglePenguji(wf.sempro_penguji || [], id) })} max="minimal 1" />
+                </div>
+                {isAdmin && (
+                  <Button className="mt-3 w-full" disabled={saving || !wf.sempro_tanggal || !wf.sempro_waktu || !(wf.sempro_ruangan || '').trim() || !(wf.sempro_penguji?.length >= 1)} onClick={handleScheduleSempro}>
+                    <CalendarDays className="w-4 h-4 mr-2" /> {wf.sempro_scheduled ? 'Perbarui Jadwal & Kirim Notifikasi' : 'Terbitkan Jadwal & Kirim Notifikasi'}
+                  </Button>
+                )}
+                {wf.sempro_scheduled && (
+                  <div className="mt-3 p-3 rounded-xl bg-green-50 border border-green-200 text-xs text-green-800">
+                    <p className="font-bold">Jadwal diterbitkan — mahasiswa menerima notifikasi.</p>
+                    <p className="mt-0.5">{fmtDateID(wf.sempro_tanggal)} · {wf.sempro_waktu} · {wf.sempro_ruangan} · Penguji: {(wf.sempro_penguji || []).map(lecturerName).join(', ')}</p>
+                  </div>
+                )}
               </div>
-              {isAdmin && (
-                <>
-                  <label className="flex items-center gap-2 text-sm text-gray-700 mb-4">
-                    <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={!!wf.revisi_sempro_verified} onChange={(e) => setWfDraft({ ...wf, revisi_sempro_verified: e.target.checked })} />
-                    Revisi pascasempro sudah diverifikasi (Berita Acara terbit)
-                  </label>
-                  <Button onClick={saveSempro} disabled={saving || semproNilai == null} className="w-full"><FlaskConical className="w-4 h-4 mr-2" /> Verifikasi Sempro & Terbitkan Berita Acara</Button>
-                </>
-              )}
+
+              {/* LANGKAH 2 — NILAI & BERITA ACARA (terkunci sampai jadwal terbit) */}
+              <div className={'mt-4 p-4 rounded-xl border ' + (wf.sempro_scheduled ? 'border-blue-200 bg-blue-50/40' : 'border-slate-200 bg-slate-50')}>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Langkah 2 — Nilai & Berita Acara</p>
+                {!wf.sempro_scheduled && (
+                  <p className="text-xs text-slate-500 flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 shrink-0" /> Nilai hanya bisa diinput setelah jadwal diterbitkan (Langkah 1).</p>
+                )}
+                {wf.sempro_scheduled && (
+                  <>
+                    {wf.sempro_penguji?.length > 0 && (
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5">Nilai per Penguji (0–100)</p>
+                        <div className="space-y-2">
+                          {wf.sempro_penguji.map((pid) => {
+                            const editable = isAdmin || (isDosen && meAsLecturer?.id === pid);
+                            return (
+                              <div key={pid} className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-white">
+                                <span className="flex-1 text-sm text-slate-800">{lecturerName(pid)}</span>
+                                <input type="number" min={0} max={100} className={nilaiInputClass} disabled={!editable} value={wf.sempro_detail?.[pid] ?? ''} onChange={(e) => setWfDraft({ ...wf, sempro_detail: { ...wf.sempro_detail, [pid]: e.target.value === '' ? undefined : Number(e.target.value) } })} placeholder="0-100" />
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {semproNilai != null && (
+                          <div className="mt-3 p-3 rounded-xl bg-slate-900 text-cyan-300 flex items-center justify-between">
+                            <span className="text-xs uppercase tracking-widest text-slate-400">Nilai Sempro (rata-rata)</span>
+                            <span className="text-2xl font-extrabold font-display">{semproNilai}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="mt-3">
+                      <Input label="Catatan Sempro / Revisi" value={wf.sempro_catatan || ''} onChange={(e) => setWfDraft({ ...wf, sempro_catatan: e.target.value })} disabled={!isAdmin} />
+                    </div>
+                    {isAdmin && (
+                      <>
+                        <label className="flex items-center gap-2 text-sm text-gray-700 mb-3 mt-3">
+                          <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={!!wf.revisi_sempro_verified} onChange={(e) => setWfDraft({ ...wf, revisi_sempro_verified: e.target.checked })} />
+                          Revisi pascasempro sudah diverifikasi (Berita Acara terbit)
+                        </label>
+                        <Button onClick={saveSempro} disabled={saving || semproNilai == null} className="w-full"><FlaskConical className="w-4 h-4 mr-2" /> Verifikasi Sempro & Terbitkan Berita Acara</Button>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
               {wf.sempro_nilai != null && wf.revisi_sempro_verified && wf.sempro_nilai >= 60 && <p className="mt-4 text-sm text-green-700 font-semibold flex items-center gap-2"><CheckCircle2 className="w-5 h-5" /> Sempro LULUS ({wf.sempro_nilai}) — lanjut penelitian</p>}
               {wf.sempro_nilai != null && wf.sempro_nilai < 60 && (
                 <div className="mt-4 p-3 rounded-xl bg-red-50 border border-red-200">
                   <p className="text-sm text-red-700 font-semibold flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Mahasiswa MENGULANG Sempro ({wf.sempro_nilai})</p>
-                  {isAdmin && <Button variant="secondary" className="mt-2" onClick={() => persist({ status: 'berjalan', sempro_nilai: null, revisi_sempro_verified: false, sempro_detail: {}, stage: 4 })}>Jadwalkan Ulang Sempro</Button>}
+                  {isAdmin && <Button variant="secondary" className="mt-2" onClick={handleRescheduleSempro}>Jadwalkan Ulang Sempro</Button>}
                 </div>
               )}
               {wf.sempro_nilai != null && (
@@ -615,6 +711,7 @@ const AlurSkripsi = () => {
               )}
             </div>
           )}
+
 
           {activeStage === 5 && (
             <div>

@@ -2,12 +2,19 @@ import { useState, useEffect, useRef } from 'react';
 import {
   getWorkflows, updateWorkflow, getTheses, getStudents, getConsultations, getFacultyRules, getLecturers,
   createThesis, updateThesis, getDefenseRequests, getDefenseSchedules, createDefenseRequest, aiAnalyze,
+  getNotifications, updateNotification,
 } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Select from '../components/common/Select';
-import { GraduationCap, Lock, CheckCircle2, AlertTriangle, FileSignature, ShieldCheck, Loader2, CalendarDays, Sparkles } from 'lucide-react';
+import { GraduationCap, Lock, CheckCircle2, AlertTriangle, FileSignature, ShieldCheck, Loader2, CalendarDays, Sparkles, Bell } from 'lucide-react';
+
+const fmtDateID = (iso) => {
+  if (!iso) return '-';
+  const d = new Date(String(iso).includes('T') ? iso : iso + 'T00:00:00');
+  return d.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+};
 
 const STAGES = [
   { n: 1, label: 'Verifikasi Prasyarat' },
@@ -45,6 +52,7 @@ const AlurSkripsiMahasiswa = () => {
   const [lecturers, setLecturers] = useState([]);
   const [consultations, setConsultations] = useState([]);
   const [rules, setRules] = useState([]);
+  const [myNotifs, setMyNotifs] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
   const [mySchedules, setMySchedules] = useState([]);
   const [showDefenseForm, setShowDefenseForm] = useState(false);
@@ -59,9 +67,9 @@ const AlurSkripsiMahasiswa = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const [rWfs, rTh, rSt, rC, rR, rReq, rSch, rLect] = await Promise.all([
+      const [rWfs, rTh, rSt, rC, rR, rReq, rSch, rLect, rNotif] = await Promise.all([
         getWorkflows(), getTheses(), getStudents(), getConsultations(), getFacultyRules(),
-        getDefenseRequests(), getDefenseSchedules(), getLecturers(),
+        getDefenseRequests(), getDefenseSchedules(), getLecturers(), getNotifications(),
       ]);
       const norm = (r) => r.data?.data || r.data || [];
       const wfs = norm(rWfs);
@@ -69,11 +77,13 @@ const AlurSkripsiMahasiswa = () => {
       const students = norm(rSt);
       const consultations = norm(rC);
       const rules = norm(rR);
+      const myNotifs = norm(rNotif);
       setRules(rules);
       setConsultations(consultations);
       const allRequests = norm(rReq);
       const allSchedules = norm(rSch);
       setLecturers(norm(rLect));
+      setMyNotifs(myNotifs.filter(n => !n.read));
       const me = students.find(s => String(s.user_id) === String(user.id));
       const myThesis = me ? theses.find(t => String(t.student_id) === String(me.id)) : null;
       const mine = myThesis ? wfs.find(w => String(w.thesis_id) === String(myThesis.id)) : null;
@@ -319,6 +329,24 @@ const AlurSkripsiMahasiswa = () => {
         <div className={`p-3 rounded-xl text-sm border ${message.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'}`}>{message.text}</div>
       )}
 
+      {myNotifs.length > 0 && (
+        <div className="space-y-2">
+          {myNotifs.slice(0, 5).map(n => (
+            <div key={n.id} className="p-3 rounded-xl border border-blue-200 bg-blue-50 flex items-start gap-3">
+              <Bell className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-blue-900">{n.title}</p>
+                <p className="text-xs text-blue-800">{n.body}</p>
+              </div>
+              <button
+                onClick={async () => { try { await updateNotification(n.id, { read: true }); load(); } catch (e) { setMessage({ type: 'error', text: 'Gagal menandai dibaca.' }); } }}
+                className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 whitespace-nowrap border border-blue-200 rounded-lg px-2 py-1 bg-white"
+              >Tandai dibaca</button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Stage progress bar */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-5">
         <div className="flex items-center justify-between mb-4">
@@ -400,11 +428,27 @@ const AlurSkripsiMahasiswa = () => {
       )}
 
       {stage === 4 && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-6">
-          <h3 className="font-bold font-display text-slate-900 mb-1">Tahap 4 — Seminar Proposal (Sempro)</h3>
-          <p className="text-sm text-slate-600">Hasil Sempro diatur oleh Admin/Panitia. Tanggal: <span className="font-semibold">{wf.sempro_tanggal || 'Belum dijadwalkan'}</span></p>
-          {wf.sempro_nilai != null && <p className="text-sm text-green-700 font-semibold mt-2">Sempro selesai — nilai rata-rata tersimpan.</p>}
-          {wf.sempro_nilai == null && <p className="text-xs text-slate-500 mt-2">Menunggu admin/panitia menerbitkan Berita Acara Sempro.</p>}
+        <div className="bg-white rounded-2xl border-2 border-blue-100 shadow-card p-6">
+          <h3 className="font-bold font-display text-slate-900 mb-2">Tahap 4 — Seminar Proposal (Sempro)</h3>
+          {wf.sempro_scheduled ? (
+            <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-sm text-blue-900">
+              <p className="text-[11px] uppercase tracking-widest text-blue-700 font-bold">Jadwal Seminar Proposal Anda</p>
+              <p className="font-bold mt-1">{fmtDateID(wf.sempro_tanggal)} · {wf.sempro_waktu || '-'} · {wf.sempro_ruangan || '-'}</p>
+              <p className="text-xs mt-1">Penguji: {(wf.sempro_penguji || []).map(id => lecturers.find(l => String(l.id) === String(id))?.nama || '-').join(' & ') || 'Dijadwalkan panitia'}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-600">Menunggu penjadwalan dari panitia. Anda akan menerima <span className="font-semibold">notifikasi</span> setelah jadwal diterbitkan.</p>
+          )}
+          {wf.sempro_nilai != null && (
+            <div className="mt-3 p-4 rounded-xl bg-slate-900 text-white">
+              <p className="text-[11px] uppercase tracking-widest text-slate-400">Hasil Seminar Proposal</p>
+              <p className="text-3xl font-extrabold font-display text-cyan-300">{wf.sempro_nilai}</p>
+              <p className="text-xs text-slate-300 mt-1">{wf.sempro_nilai >= 60 ? 'LULUS — lanjut ke Tahap 5 (Penelitian & Syarat Khusus).' : 'BELUM LULUS — panitia akan mengusulkan jadwal ulang.'}</p>
+            </div>
+          )}
+          {wf.sempro_nilai == null && wf.sempro_scheduled && (
+            <p className="text-xs text-slate-500 mt-2">Menunggu pelaksanaan & penilaian penguji. Hasil akan diinformasikan lewat notifikasi.</p>
+          )}
         </div>
       )}
 

@@ -92,7 +92,7 @@ const guardWrite = (req, res, next) => {
       return next();
     }
     if (req.method === 'PATCH') {
-      if (role !== 'admin' && role !== 'dosen') return res.status(403).json({ success: false, message: 'Akses ditolak.' });
+      if (role !== 'admin' && role !== 'dosen' && role !== 'mahasiswa') return res.status(403).json({ success: false, message: 'Akses ditolak.' });
       return next();
     }
     if (req.method === 'DELETE') {
@@ -158,13 +158,13 @@ const scopeThesesRead = (req, res, next) => {
   }
 };
 
-// Notifications: GET disaring berdasarkan role (admin hanya lihat notif admin, dosen hanya lihat notif dosen)
+// Notifications: GET disaring berdasarkan role (admin hanya notif admin, dosen notif dosen, mahasiswa notif mahasiswa)
 const scopeNotificationsRead = (req, res, next) => {
   if (req.method !== 'GET') return next();
   const parts = req.path.split('/').filter(Boolean);
   if (parts[0] !== 'notifications') return next();
   const role = req.user?.role;
-  if (role !== 'admin' && role !== 'dosen') return res.status(403).json({ success: false, message: 'Akses ditolak.' });
+  if (role !== 'admin' && role !== 'dosen' && role !== 'mahasiswa') return res.status(403).json({ success: false, message: 'Akses ditolak.' });
   try {
     const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
     const list = (db.notifications || []).filter(n => n.recipient_role === role);
