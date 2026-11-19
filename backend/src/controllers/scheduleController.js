@@ -153,6 +153,21 @@ function listSchedules(req, res) {
       };
     });
 
+    // Dosen hanya melihat jadwal yang melibatkan dirinya (sebagai penguji)
+    if (req.user?.role === 'dosen') {
+      const me = lecturers.find(l => String(l.user_id) === String(req.user.id));
+      const myId = me ? Number(me.id) : null;
+      const filtered = result.filter(s =>
+        Number(s.dosen_penguji_1_id) === myId ||
+        Number(s.dosen_penguji_2_id) === myId
+      );
+      return res.json({
+        success: true,
+        data: filtered,
+        message: 'Jadwal defense (hanya Anda)'
+      });
+    }
+
     res.json({
       success: true,
       data: result,

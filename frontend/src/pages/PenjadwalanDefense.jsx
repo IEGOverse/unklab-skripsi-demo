@@ -28,8 +28,7 @@ const PenjadwalanDefense = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
   const [data, setData] = useState([]);
-  const [requests, setRequests] = useState([]);
-  const [lecturers, setLecturers] = useState([]);
+  const [requests, setRequests] = useState([]);  const [lecturers, setLecturers] = useState([]);
   const [theses, setTheses] = useState([]);
   const [students, setStudents] = useState([]);
   const [tab, setTab] = useState('perlu_dijadwal');
@@ -204,6 +203,31 @@ const PenjadwalanDefense = () => {
   };
 
   const lecturerOptions = lecturers.map(l => ({ value: l.id, label: l.nama }));
+
+  // ===== Tampilan untuk Dosen: read-only, hanya jadwal yang melibatkan dia =====
+  if (!isAdmin) {
+    const myLecturer = lecturers.find(l => String(l.user_id) === String(user?.id));
+    const myId = myLecturer ? Number(myLecturer.id) : null;
+    // Hanya jadwal yang melibatkan dosen yang login (sebagai penguji 1/2 atau pembimbing via request)
+    const mySchedules = data.filter(s => {
+      const isPenguji = Number(s.dosen_penguji_1_id) === myId || Number(s.dosen_penguji_2_id) === myId;
+      const req = requests.find(x => String(x.id) === String(s.defense_request_id));
+      const isPembimbing = req && (Number(req.pembimbing_1_id) === myId || Number(req.pembimbing_2_id) === myId);
+      return isPenguji || isPembimbing;
+    });
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-extrabold font-display text-slate-900 tracking-tight">Jadwal Defense</h1>
+          <p className="text-gray-600">Jadwal sidang defense yang melibatkan Anda (read-only). Penjadwalan diatur oleh Admin.</p>
+        </div>
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-6">
+          <h3 className="font-bold font-display text-slate-900 mb-4">Jadwal Defense Saya</h3>
+          <Table columns={scheduleColumns} data={mySchedules} loading={loading} emptyMessage="Belum ada jadwal defense yang melibatkan Anda" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
