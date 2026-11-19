@@ -4,7 +4,7 @@
       "id": 1,
       "username": "admin",
       "email": "admin@unklab.ac.id",
-      "password_hash": "a5405772d66bc1a5d41454128037934b98b2007393c1cb7db02a12f15d0a0855",
+      "password_hash": "ac9689e2272427085e35b9d3e3e8bed88cb3434828b43b86fc0596cad4c6e270",
       "role": "admin",
       "created_at": "2026-01-01T00:00:00Z"
     },
@@ -12,7 +12,7 @@
       "id": 2,
       "username": "dosen_a",
       "email": "dosen.a@unklab.ac.id",
-      "password_hash": "9546c4b4b1bd5fcfb98ccd50820b9b2ff7f838ad662de5416e4dd32777bdf54c",
+      "password_hash": "c431bffe6c2cf3b69ad2e9cbbe9806835dbced7c97b9d3f946387ee92eb17018",
       "role": "dosen",
       "created_at": "2026-01-01T00:00:00Z"
     },
@@ -20,7 +20,7 @@
       "id": 3,
       "username": "dosen_b",
       "email": "dosen.b@unklab.ac.id",
-      "password_hash": "9546c4b4b1bd5fcfb98ccd50820b9b2ff7f838ad662de5416e4dd32777bdf54c",
+      "password_hash": "c431bffe6c2cf3b69ad2e9cbbe9806835dbced7c97b9d3f946387ee92eb17018",
       "role": "dosen",
       "created_at": "2026-01-01T00:00:00Z"
     },
@@ -28,7 +28,7 @@
       "id": 4,
       "username": "mhs_001",
       "email": "mhs001@unklab.ac.id",
-      "password_hash": "0782af8312d1d7c2f0e57da774202a2350b2839d48537e37541c0eddee7f7239",
+      "password_hash": "57b2f6814bc2885828dd742fa2b335116022c829c1c4370469e0223c8d3e93d9",
       "role": "mahasiswa",
       "created_at": "2026-01-01T00:00:00Z"
     },
@@ -36,7 +36,7 @@
       "id": 5,
       "username": "mhs_002",
       "email": "mhs002@unklab.ac.id",
-      "password_hash": "0782af8312d1d7c2f0e57da774202a2350b2839d48537e37541c0eddee7f7239",
+      "password_hash": "57b2f6814bc2885828dd742fa2b335116022c829c1c4370469e0223c8d3e93d9",
       "role": "mahasiswa",
       "created_at": "2026-01-01T00:00:00Z"
     },
@@ -44,28 +44,28 @@
       "id": 6,
       "username": "dosen_fkep1",
       "email": "dosen.fkep1@unklab.ac.id",
-      "password_hash": "9546c4b4b1bd5fcfb98ccd50820b9b2ff7f838ad662de5416e4dd32777bdf54c",
+      "password_hash": "c431bffe6c2cf3b69ad2e9cbbe9806835dbced7c97b9d3f946387ee92eb17018",
       "role": "dosen"
     },
     {
       "id": 7,
       "username": "dosen_fkep2",
       "email": "dosen.fkep2@unklab.ac.id",
-      "password_hash": "9546c4b4b1bd5fcfb98ccd50820b9b2ff7f838ad662de5416e4dd32777bdf54c",
+      "password_hash": "c431bffe6c2cf3b69ad2e9cbbe9806835dbced7c97b9d3f946387ee92eb17018",
       "role": "dosen"
     },
     {
       "id": 8,
       "username": "dosen_fkip1",
       "email": "dosen.fkip1@unklab.ac.id",
-      "password_hash": "9546c4b4b1bd5fcfb98ccd50820b9b2ff7f838ad662de5416e4dd32777bdf54c",
+      "password_hash": "c431bffe6c2cf3b69ad2e9cbbe9806835dbced7c97b9d3f946387ee92eb17018",
       "role": "dosen"
     },
     {
       "id": 9,
       "username": "dosen_faperta1",
       "email": "dosen.faperta1@unklab.ac.id",
-      "password_hash": "9546c4b4b1bd5fcfb98ccd50820b9b2ff7f838ad662de5416e4dd32777bdf54c",
+      "password_hash": "c431bffe6c2cf3b69ad2e9cbbe9806835dbced7c97b9d3f946387ee92eb17018",
       "role": "dosen"
     }
   ],
