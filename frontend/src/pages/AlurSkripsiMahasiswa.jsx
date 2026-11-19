@@ -35,6 +35,7 @@ const AlurSkripsiMahasiswa = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
   const checklistRef = useRef([]);
+  const checklistSaveRef = useRef(Promise.resolve());
 
   // Form state
   const [judul1, setJudul1] = useState('');
@@ -262,14 +263,18 @@ const AlurSkripsiMahasiswa = () => {
   };
 
   const handleToggleChecklist = async (label) => {
-    // Gunakan ref agar toggle beruntun tidak memakai state basi (race condition)
+    // Ref agar toggle beruntun tidak memakai state basi + antrean promise
+    // agar PUT terserialisasi (urutan tiba di server = urutan klik)
     const cur = checklistRef.current;
     const next = cur.includes(label) ? cur.filter(x => x !== label) : [...cur, label];
     checklistRef.current = next;
     setChecklist(next);
-    try {
-      await updateWorkflow(wf.id, { checklist_checked: next });
-    } catch (e) { setMessage({ type: 'error', text: 'Gagal menyimpan checklist.' }); }
+    checklistSaveRef.current = checklistSaveRef.current.then(() =>
+      updateWorkflow(wf.id, { checklist_checked: next }).catch(() => {
+        setMessage({ type: 'error', text: 'Gagal menyimpan checklist.' });
+      })
+    );
+    await checklistSaveRef.current;
   };
 
   const handleSaveTurnitin = async () => {
