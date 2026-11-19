@@ -76,16 +76,6 @@ const AlurSkripsi = () => {
 
   const isAdmin = user?.role === 'admin';
   const isDosen = user?.role === 'dosen';
-  const linkedDefenseRequest = wf ? (defenseRequests || []).filter(r => String(r.thesis_id) === String(wf.thesis_id)).slice(-1)[0] || null : null;
-  const scheduledDefense = linkedDefenseRequest ? (defenseSchedules || []).find(s => Number(s.defense_request_id) === Number(linkedDefenseRequest.id)) : null;
-  const defenseApproved = !!linkedDefenseRequest && linkedDefenseRequest.status === 'disetujui';
-  const requestStatusInfo = {
-    pending: { label: 'Menunggu ACC Pembimbing', cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-    diterima_dosen: { label: 'Diterima Pembimbing — Menunggu Penjadwalan', cls: 'bg-green-100 text-green-800 border-green-200' },
-    ditolak_dosen: { label: 'Ditolak Pembimbing', cls: 'bg-red-100 text-red-800 border-red-200' },
-    menunggu_persetujuan_dosen: { label: 'Diusulkan Panitia — Menunggu Pembimbing', cls: 'bg-amber-100 text-amber-800 border-amber-200' },
-    disetujui: { label: 'Dijadwalkan', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  };
 
   useEffect(() => { load(); }, []);
   const load = async () => {
@@ -128,6 +118,16 @@ const AlurSkripsi = () => {
   };
 
   const wf = wfDraft;
+  const linkedDefenseRequest = wf ? (defenseRequests || []).filter(r => String(r.thesis_id) === String(wf.thesis_id)).slice(-1)[0] || null : null;
+  const scheduledDefense = linkedDefenseRequest ? (defenseSchedules || []).find(s => Number(s.defense_request_id) === Number(linkedDefenseRequest.id)) : null;
+  const defenseApproved = !!linkedDefenseRequest && linkedDefenseRequest.status === 'disetujui';
+  const requestStatusInfo = {
+    pending: { label: 'Menunggu ACC Pembimbing', cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+    diterima_dosen: { label: 'Diterima Pembimbing — Menunggu Penjadwalan', cls: 'bg-green-100 text-green-800 border-green-200' },
+    ditolak_dosen: { label: 'Ditolak Pembimbing', cls: 'bg-red-100 text-red-800 border-red-200' },
+    menunggu_persetujuan_dosen: { label: 'Diusulkan Panitia — Menunggu Pembimbing', cls: 'bg-amber-100 text-amber-800 border-amber-200' },
+    disetujui: { label: 'Dijadwalkan', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+  };
   const rule = rules.find(r => r.fakultas === wf?.fakultas) || {};
   const thesis = theses.find(t => t.id === wf?.thesis_id);
   const student = students.find(s => s.id === thesis?.student_id);
