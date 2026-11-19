@@ -43,6 +43,8 @@ const AlurSkripsiMahasiswa = () => {
   const [transkrip, setTranskrip] = useState(false);
   const [revisiLink, setRevisiLink] = useState('');
   const [lecturers, setLecturers] = useState([]);
+  const [consultations, setConsultations] = useState([]);
+  const [rules, setRules] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
   const [mySchedules, setMySchedules] = useState([]);
   const [showDefenseForm, setShowDefenseForm] = useState(false);
@@ -67,6 +69,8 @@ const AlurSkripsiMahasiswa = () => {
       const students = norm(rSt);
       const consultations = norm(rC);
       const rules = norm(rR);
+      setRules(rules);
+      setConsultations(consultations);
       const allRequests = norm(rReq);
       const allSchedules = norm(rSch);
       setLecturers(norm(rLect));
@@ -130,6 +134,10 @@ const AlurSkripsiMahasiswa = () => {
   };
 
   // Pendaftaran Ujian Defense (terintegrasi — bagian dari Tahap 7, bukan halaman terpisah)
+  const ruleFak = rules.find(r => r.fakultas === wf.fakultas) || {};
+  const minBimbingan = ruleFak.min_bimbingan ?? 8;
+  const bimbinganCount = consultations.filter(c => String(c.thesis_id) === String(thesisId)).length;
+  const bimbinganPct = Math.min(100, Math.round((bimbinganCount / Math.max(1, minBimbingan)) * 100));
   const activeRequest = myRequests.find(r => ['pending', 'diterima_dosen', 'menunggu_persetujuan_dosen', 'disetujui'].includes(r.status))
     || myRequests[myRequests.length - 1]
     || null;
@@ -370,7 +378,21 @@ const AlurSkripsiMahasiswa = () => {
         <div className="bg-white rounded-2xl border-2 border-blue-100 shadow-card p-6">
           <h3 className="font-bold font-display text-slate-900 mb-1">Tahap 3 — Bimbingan Proposal (Bab 1–3)</h3>
           <div className="mb-3 p-3 rounded-xl bg-blue-50 border border-blue-100 text-sm text-blue-800">
-            Logbook bimbingan harus minimal {(wf.faculty_rules ? 8 : 8)} kali sebelum dosen ACC. Abstrak & judul sudah diverifikasi di Tahap 2.
+            Abstrak &amp; judul sudah diverifikasi di Tahap 2. Minimal bimbingan {minBimbingan} kali sebelum dosen ACC.
+          </div>
+          <div className="mb-4 p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Progress Logbook Bimbingan</span>
+              <span className={`text-xs font-bold ${bimbinganCount >= minBimbingan ? 'text-green-700' : 'text-slate-700'}`}>{bimbinganCount}/{minBimbingan}</span>
+            </div>
+            <div className="h-2.5 w-full rounded-full bg-slate-200 overflow-hidden">
+              <div className={`h-full rounded-full transition-all duration-500 ${bimbinganCount >= minBimbingan ? 'bg-green-500' : 'bg-blue-600'}`} style={{ width: `${bimbinganPct}%` }} />
+            </div>
+            <p className="mt-1.5 text-[11px] text-slate-500">
+              {bimbinganCount >= minBimbingan
+                ? 'Logbook lengkap — menunggu ACC Pembimbing.'
+                : `Kurang ${minBimbingan - bimbinganCount} bimbingan lagi sebelum dosen dapat memberikan ACC.`}
+            </p>
           </div>
           <Input label="Link Draf Bab 1–3" value={drafLink} onChange={(e) => setDrafLink(e.target.value)} placeholder="https://drive.google.com/..." />
           <Button onClick={handleSaveDraf} disabled={saving} variant="primary" className="mt-3">Simpan Link Draf</Button>
