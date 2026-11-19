@@ -98,7 +98,12 @@ const BimbinganSaya = () => {
         <div className={`p-3 rounded-xl text-sm border ${message.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'}`}>{message.text}</div>
       )}
 
-      {mine.length === 0 ? (
+      {loading ? (
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-10 text-center">
+          <div className="inline-block w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="mt-3 text-sm text-slate-500">Memuat data bimbingan...</p>
+        </div>
+      ) : mine.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-10 text-center">
           <p className="text-slate-500">Belum ada skripsi yang Anda bimbing.</p>
         </div>
